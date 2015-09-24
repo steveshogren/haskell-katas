@@ -2,6 +2,8 @@ module BankOCR where
 
 import Control.Monad
 import Data.List.Split(chunksOf)
+import System.Random
+import Control.Applicative
 
 getFile :: FilePath -> IO [String]
 getFile name = liftM (take 3 . lines) $ readFile name
@@ -56,3 +58,27 @@ fib2 =
 doer = do
   x <- getFile "input.dt"
   return $ map matchWith $ makeDigitTable $ breakIntoThrees x
+
+shuffle :: [a] -> IO [a]
+shuffle [] = return []
+shuffle lst = do
+    (e, rest) <- pickElem <$> getIx
+    (e:) <$> shuffle rest
+    where
+    getIx = getStdRandom $ randomR (1, length lst)
+    pickElem n = case splitAt n lst of
+        ([], s) -> error $ "failed at index " ++ show n -- should never match
+        (r, s)  -> (last r, init r ++ s)
+
+shuffleThem = do
+      chunksOf 2 <$> shuffle [
+                             "nils",
+                             "keith",
+                             "boguste",
+                             "patrick",
+                             "justin",
+                             "steve",
+                             "max",
+                             "becky",
+                             "dave"
+                         ]
