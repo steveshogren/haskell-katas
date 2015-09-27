@@ -55,9 +55,15 @@ fib2 =
   let fibi a b n = if (n > 0) then fibi b (a+b) (n-1) else a
   in fibi 0 1
 
+checkSum :: Integral a => [a] -> Bool
+checkSum [d9,d8,d7,d6,d5,d4,d3,d2,d1] = 
+   let x = d1 + (2 * d2) + (3 * d3) + (4 * d4) + (5 * d5) + (6 * d6) + (7 * d7) + (8* d8) + (9 * d9)
+   in mod x 11 == 0
+checkSum _ = False
+
 doer = do
   x <- getFile "input.dt"
-  return $ map matchWith $ makeDigitTable $ breakIntoThrees x
+  return . checkSum . map matchWith . makeDigitTable . breakIntoThrees $ x
 
 shuffle :: [a] -> IO [a]
 shuffle [] = return []
