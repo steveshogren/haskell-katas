@@ -61,9 +61,13 @@ checkSum [d9,d8,d7,d6,d5,d4,d3,d2,d1] =
    in mod x 11 == 0
 checkSum _ = False
 
+makeOutput x =
+    let msg = if checkSum x then "    " else " ERR"
+    in (foldr (++) " " $ map show x) ++ msg
+
 doer = do
   x <- getFile "input.dt"
-  return . checkSum . map matchWith . makeDigitTable . breakIntoThrees $ x
+  return . makeOutput . map matchWith . makeDigitTable . breakIntoThrees $ x
 
 shuffle :: [a] -> IO [a]
 shuffle [] = return []
@@ -77,14 +81,4 @@ shuffle lst = do
         (r, s)  -> (last r, init r ++ s)
 
 shuffleThem = do
-      chunksOf 2 <$> shuffle [
-                             "nils",
-                             "keith",
-                             "boguste",
-                             "patrick",
-                             "justin",
-                             "steve",
-                             "max",
-                             "becky",
-                             "dave"
-                         ]
+      chunksOf 2 <$> shuffle ["nils", "keith", "boguste", "patrick", "justin", "steve", "max", "becky", "dave"]
