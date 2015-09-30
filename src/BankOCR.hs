@@ -4,6 +4,7 @@ import Control.Monad
 import Data.List.Split(chunksOf)
 import System.Random
 import Control.Applicative
+import Data.Either
 
 -- data Number = Number String String String
 
@@ -17,38 +18,38 @@ makeDigitTable [[], [], [], []] = []
 makeDigitTable [a, b, c, _] =
   [[head a, head b, head c]] ++ makeDigitTable [tail a, tail b, tail c, []]
 
-matchWith :: Num a => [[Char]] -> a
+matchWith :: Num a => [[Char]] -> Either String a
 matchWith [" _ ",
            "| |",
-           "|_|"] = 0
+           "|_|"] = Right 0
 matchWith ["   ",
            "  |",
-           "  |"] = 1
+           "  |"] = Right 1
 matchWith [" _ ",
            " _|",
-           "|_ "] = 2
+           "|_ "] = Right 2
 matchWith [" _ ",
            " _|",
-           " _|"] = 3
+           " _|"] = Right 3
 matchWith ["   ",
            "|_|",
-           "  |"] = 4
+           "  |"] = Right 4
 matchWith [" _ ",
            "|_ ",
-           " _|"] = 5
+           " _|"] = Right 5
 matchWith [" _ ",
            "|_ ",
-           "|_|"] = 6
+           "|_|"] = Right 6
 matchWith [" _ ",
            "  |",
-           "  |"] = 7
+           "  |"] = Right 7
 matchWith [" _ ",
            "|_|",
-           "|_|"] = 8
+           "|_|"] = Right 8
 matchWith [" _ ",
            "|_|",
-           "  |"] = 9
-matchWith x = error $ show x
+           "  |"] = Right 9
+matchWith _ = Left "?"
 
 checkSum :: Integral a => [a] -> Bool
 checkSum [d9,d8,d7,d6,d5,d4,d3,d2,d1] =
@@ -56,9 +57,14 @@ checkSum [d9,d8,d7,d6,d5,d4,d3,d2,d1] =
    in mod x 11 == 0
 checkSum _ = False
 
-makeOutput x =
-    let msg = if checkSum x then "    " else " ERR"
-    in (foldr (++) " " $ map show x) ++ msg
+getMessage x = if (checkSum . rights) x then "    " else " ERR"
+
+getCharacter :: Show a => Either String a -> String
+getCharacter (Left a) = a
+getCharacter (Right a) = show a
+
+makeOutput :: (Show a, Integral a) => [Either String a] -> String
+makeOutput x = (foldr (++) " " $ map getCharacter x) ++ (getMessage x)
 
 parse = makeOutput . map matchWith . makeDigitTable . breakIntoThrees
 
