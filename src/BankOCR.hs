@@ -51,13 +51,14 @@ matchWith [" _ ",
            "  |"] = Right 9
 matchWith _ = Left "?"
 
-checkSum :: Integral a => [a] -> Bool
+checkSum :: Integral a => [a] -> String
 checkSum [d9,d8,d7,d6,d5,d4,d3,d2,d1] =
    let x = d1 + (2 * d2) + (3 * d3) + (4 * d4) + (5 * d5) + (6 * d6) + (7 * d7) + (8* d8) + (9 * d9)
-   in mod x 11 == 0
-checkSum _ = False
+   in if mod x 11 == 0 then "    " else " ERR"
+checkSum _ = " INV"
 
-getMessage x = if (checkSum . rights) x then "    " else " ERR"
+getMessage :: Integral a => [Either String a] -> String
+getMessage = checkSum . rights
 
 getCharacter :: Show a => Either String a -> String
 getCharacter (Left a) = a
