@@ -18,7 +18,13 @@ makeDigitTable [[], [], [], []] = []
 makeDigitTable [a, b, c, _] =
   [[head a, head b, head c]] ++ makeDigitTable [tail a, tail b, tail c, []]
 
-matchWith :: Num a => [[Char]] -> Either String a
+type Letter = Either (String, [String]) Int
+
+tops = [" _ ", "   "]
+middles = ["| |","|_|", " _|",  "|_ ", "  |"]
+bottoms = ["|_|","  |", " _|",  "|_ "]
+
+matchWith :: [String] -> Letter
 matchWith [" _ ",
            "| |",
            "|_|"] = Right 0
@@ -49,22 +55,23 @@ matchWith [" _ ",
 matchWith [" _ ",
            "|_|",
            "  |"] = Right 9
-matchWith _ = Left "?"
+matchWith a = Left ("?", a)
 
-checkSum :: Integral a => [a] -> String
+checkSum :: [Int] -> String
 checkSum [d9,d8,d7,d6,d5,d4,d3,d2,d1] =
    let x = d1 + (2 * d2) + (3 * d3) + (4 * d4) + (5 * d5) + (6 * d6) + (7 * d7) + (8* d8) + (9 * d9)
    in if mod x 11 == 0 then "    " else " ERR"
-checkSum _ = " INV"
+checkSum _ = " ILL"
 
-getMessage :: Integral a => [Either String a] -> String
+
+getMessage :: [Letter] -> String
 getMessage = checkSum . rights
 
-getCharacter :: Show a => Either String a -> String
-getCharacter (Left a) = a
+getCharacter :: Letter -> String
+getCharacter (Left (str, real)) = str
 getCharacter (Right a) = show a
 
-makeOutput :: (Show a, Integral a) => [Either String a] -> String
+makeOutput :: [Letter] -> String
 makeOutput x = (foldr (++) " " $ map getCharacter x) ++ (getMessage x)
 
 parse = makeOutput . map matchWith . makeDigitTable . breakIntoThrees
