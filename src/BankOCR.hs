@@ -24,6 +24,21 @@ tops = [" _ ", "   "]
 middles = ["| |","|_|", " _|",  "|_ ", "  |"]
 bottoms = ["|_|","  |", " _|",  "|_ "]
 
+alternativesTop " _ " = ["   "]
+alternativesTop "   " = [" _ "]
+
+alternativesMid "| |" = ["|_|", "  |"]
+alternativesMid "|_|" = ["| |", " _|",  "|_ "]
+alternativesMid " _|" = ["|_|", "  |"]
+alternativesMid "|_ " = ["|_|"]
+alternativesMid "  |" = ["| |", " _|"]
+
+alternativesBottom "|_|" = [" _|",  "|_ "]
+alternativesBottom "  |" = [" _|"]
+alternativesBottom " _|" = ["|_|", "  |"]
+alternativesBottom "|_ " = ["|_|"]
+
+
 matchWith :: [String] -> Letter
 matchWith [" _ ",
            "| |",
@@ -57,6 +72,7 @@ matchWith [" _ ",
            "  |"] = Right 9
 matchWith a = Left ("?", a)
 
+
 checkSum :: [Int] -> String
 checkSum [d9,d8,d7,d6,d5,d4,d3,d2,d1] =
    let x = d1 + (2 * d2) + (3 * d3) + (4 * d4) + (5 * d5) + (6 * d6) + (7 * d7) + (8* d8) + (9 * d9)
@@ -80,7 +96,13 @@ doer = do
   x <- getFile "input.dt"
   return $ map parse x
 
-
+tests = do
+  output <- doer
+  return $ ["711111111     ",
+            "123456789     ",
+            "1?3?56789  ILL",
+            "123456781  ERR",
+            "000000051     "] == output
 
 
 
