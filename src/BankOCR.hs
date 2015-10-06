@@ -38,7 +38,6 @@ alternativesBottom "  |" = [" _|"]
 alternativesBottom " _|" = ["|_|", "  |"]
 alternativesBottom "|_ " = ["|_|"]
 
-
 matchWith :: [String] -> Letter
 matchWith [" _ ",
            "| |",
@@ -72,16 +71,22 @@ matchWith [" _ ",
            "  |"] = Right 9
 matchWith a = Left ("?", a)
 
+data CheckSumResult = Valid | Invalid | Missing
 
-checkSum :: [Int] -> String
+type UnparsedLetter = (Letter, [[String]])
+checkSum :: [Int] -> CheckSumResult
 checkSum [d9,d8,d7,d6,d5,d4,d3,d2,d1] =
    let x = d1 + (2 * d2) + (3 * d3) + (4 * d4) + (5 * d5) + (6 * d6) + (7 * d7) + (8* d8) + (9 * d9)
-   in if mod x 11 == 0 then "    " else " ERR"
-checkSum _ = " ILL"
+   in if mod x 11 == 0 then Valid else Invalid
+checkSum _ = Missing
 
+printCheckSum :: CheckSumResult -> String
+printCheckSum Valid = "    "
+printCheckSum Invalid = " ERR"
+printCheckSum Missing = " ILL"
 
 getMessage :: [Letter] -> String
-getMessage = checkSum . rights
+getMessage = printCheckSum . checkSum . rights
 
 getCharacter :: Letter -> String
 getCharacter (Left (str, real)) = str
@@ -91,6 +96,10 @@ makeOutput :: [Letter] -> String
 makeOutput x = (foldr (++) " " $ map getCharacter x) ++ (getMessage x)
 
 parse = makeOutput . map matchWith . makeDigitTable . breakIntoThrees
+
+testChecksum = checkSum . rights . map matchWith
+
+smartparse =  testChecksum . makeDigitTable . breakIntoThrees
 
 doer = do
   x <- getFile "input.dt"
