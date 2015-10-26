@@ -73,7 +73,8 @@ matchWith a = Left ("?", a)
 
 data CheckSumResult = Valid | Invalid | Missing
 
-type UnparsedLetter = (Letter, [[String]])
+type UnparsedLetter = ([String], [[String]])
+
 checkSum :: [Int] -> CheckSumResult
 checkSum [d9,d8,d7,d6,d5,d4,d3,d2,d1] =
    let x = d1 + (2 * d2) + (3 * d3) + (4 * d4) + (5 * d5) + (6 * d6) + (7 * d7) + (8* d8) + (9 * d9)
@@ -99,7 +100,13 @@ parse = makeOutput . map matchWith . makeDigitTable . breakIntoThrees
 
 testChecksum = checkSum . rights . map matchWith
 
-smartparse =  testChecksum . makeDigitTable . breakIntoThrees
+includeAlts :: [String] -> UnparsedLetter
+includeAlts [top, mid, bottom] =
+  ([top, mid, bottom], [alternativesTop top, alternativesMid mid, alternativesBottom bottom])
+
+smartparse a =
+  let unparsed = includeAlts . makeDigitTable . breakIntoThrees a
+  in 
 
 doer = do
   x <- getFile "input.dt"
