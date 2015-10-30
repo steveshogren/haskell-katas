@@ -8,6 +8,8 @@ import Data.Either
 
 -- data Number = Number String String String
 
+
+
 getFile :: FilePath -> IO [[String]]
 getFile name = liftM (chunksOf 4 . lines) $ readFile name
 
@@ -104,9 +106,9 @@ includeAlts :: [String] -> UnparsedLetter
 includeAlts [top, mid, bottom] =
   ([top, mid, bottom], [alternativesTop top, alternativesMid mid, alternativesBottom bottom])
 
-smartparse a =
-  let unparsed = includeAlts . makeDigitTable . breakIntoThrees a
-  in 
+-- smartparse a =
+--   let unparsed = includeAlts . makeDigitTable . breakIntoThrees a
+--   in 
 
 doer = do
   x <- getFile "input.dt"
@@ -147,3 +149,9 @@ shuffle lst = do
 
 shuffleThem = do
       chunksOf 2 <$> shuffle ["nils", "keith", "boguste", "patrick", "justin", "steve", "max", "becky", "dave"]
+
+diceRoller :: IO Int
+diceRoller =
+  getStdRandom $ randomR (1, 6)
+
+rolls = sequence $ map (\x -> diceRoller) [1..100]
