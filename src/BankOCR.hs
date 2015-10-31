@@ -2,6 +2,7 @@ module BankOCR where
 
 import Control.Monad
 import Data.List.Split(chunksOf)
+import Data.List(groupBy, sort)
 import System.Random
 import Control.Applicative
 import Data.Either
@@ -154,4 +155,6 @@ diceRoller :: IO Int
 diceRoller =
   getStdRandom $ randomR (1, 6)
 
-rolls = sequence $ map (\x -> diceRoller) [1..100]
+rolls = do
+  rs <- sequence $ map (\x -> diceRoller) [1..10000]
+  return $ map (\x -> (head x,length x)) $ groupBy (==) $ sort rs
