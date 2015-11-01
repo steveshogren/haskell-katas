@@ -2,7 +2,7 @@ module BankOCR where
 
 import Control.Monad
 import Data.List.Split(chunksOf)
-import Data.List(groupBy, sort)
+import Data.List(groupBy, sort, foldl)
 import System.Random
 import Control.Applicative
 import Data.Either
@@ -157,4 +157,8 @@ diceRoller =
 
 rolls = do
   rs <- sequence $ map (\x -> diceRoller) [1..10000]
-  return $ map (\x -> (head x,length x)) $ groupBy (==) $ sort rs
+  let groups =  map (\x -> (head x,length x)) $ groupBy (==) $ sort rs
+      counts = map snd groups
+      total = foldl (+) 0 counts
+      variance = map (\x -> (100 *) $ (fromIntegral x) / (fromIntegral total)) counts
+    in return variance
