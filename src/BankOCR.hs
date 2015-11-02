@@ -160,5 +160,7 @@ rolls = do
   let groups =  map (\x -> (head x,length x)) $ groupBy (==) $ sort rs
       counts = map snd groups
       total = foldl (+) 0 counts
-      variance = map (\x -> (100 *) $ (fromIntegral x) / (fromIntegral total)) counts
-    in return variance
+      expectedMaxVar = 20
+      variance = map (\x -> (expectedMaxVar >) $ (100 *) $ (fromIntegral x) / (fromIntegral total)) counts
+      allInVariance = foldl (&&) True variance
+    in return allInVariance
