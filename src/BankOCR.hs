@@ -155,12 +155,22 @@ diceRoller :: IO Int
 diceRoller =
   getStdRandom $ randomR (1, 6)
 
+rollDice :: IO Int
+rollDice = getStdRandom $ randomR (1, 6)
+
+badDiceRoller :: IO Int
+badDiceRoller = do
+  firstRoll <- rollDice
+  if firstRoll == 6
+  then return 6
+  else rollDice
+
 rolls = do
-  rs <- sequence $ map (\x -> diceRoller) [1..10000]
+  rs <- sequence $ map (\x -> badDiceRoller) [1..10000]
   let groups =  map (\x -> (head x,length x)) $ groupBy (==) $ sort rs
       counts = map snd groups
       total = foldl (+) 0 counts
       expectedMaxVar = 20
       variance = map (\x -> (expectedMaxVar >) $ (100 *) $ (fromIntegral x) / (fromIntegral total)) counts
       allInVariance = foldl (&&) True variance
-    in return allInVariance
+    in return (allInVariance,counts)
