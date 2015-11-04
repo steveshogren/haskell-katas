@@ -7,21 +7,21 @@ import System.Random
 import Control.Applicative
 import Data.Either
 
--- data Number = Number String String String
-
-
-
 getFile :: FilePath -> IO [[String]]
 getFile name = liftM (chunksOf 4 . lines) $ readFile name
+
+type LetterAlts = ([String], [String], [String])
+type LetterStrings = (String, String, String)
+type UnparsedLetter = (LetterStrings, LetterAlts)
+type Letter = Either (String, LetterStrings) Int
 
 breakIntoThrees :: [String] -> [[String]]
 breakIntoThrees = map (chunksOf 3)
 
+makeDigitTable :: [[String]] -> [LetterStrings]
 makeDigitTable [[], [], [], []] = []
 makeDigitTable [a, b, c, _] =
-  [[head a, head b, head c]] ++ makeDigitTable [tail a, tail b, tail c, []]
-
-type Letter = Either (String, [String]) Int
+  [(head a, head b, head c)] ++ makeDigitTable [tail a, tail b, tail c, []]
 
 tops = [" _ ", "   "]
 middles = ["| |","|_|", " _|",  "|_ ", "  |"]
@@ -41,42 +41,42 @@ alternativesBottom "  |" = [" _|"]
 alternativesBottom " _|" = ["|_|", "  |"]
 alternativesBottom "|_ " = ["|_|"]
 
-matchWith :: [String] -> Letter
-matchWith [" _ ",
+matchWith :: (String,String,String) -> Letter
+matchWith (" _ ",
            "| |",
-           "|_|"] = Right 0
-matchWith ["   ",
+           "|_|") = Right 0
+matchWith ("   ",
            "  |",
-           "  |"] = Right 1
-matchWith [" _ ",
+           "  |") = Right 1
+matchWith (" _ ",
            " _|",
-           "|_ "] = Right 2
-matchWith [" _ ",
+           "|_ ") = Right 2
+matchWith (" _ ",
            " _|",
-           " _|"] = Right 3
-matchWith ["   ",
+           " _|") = Right 3
+matchWith ("   ",
            "|_|",
-           "  |"] = Right 4
-matchWith [" _ ",
+           "  |") = Right 4
+matchWith (" _ ",
            "|_ ",
-           " _|"] = Right 5
-matchWith [" _ ",
+           " _|") = Right 5
+matchWith (" _ ",
            "|_ ",
-           "|_|"] = Right 6
-matchWith [" _ ",
+           "|_|") = Right 6
+matchWith (" _ ",
            "  |",
-           "  |"] = Right 7
-matchWith [" _ ",
+           "  |") = Right 7
+matchWith (" _ ",
            "|_|",
-           "|_|"] = Right 8
-matchWith [" _ ",
+           "|_|") = Right 8
+matchWith (" _ ",
            "|_|",
-           "  |"] = Right 9
+           "  |") = Right 9
 matchWith a = Left ("?", a)
 
 data CheckSumResult = Valid | Invalid | Missing
 
-type UnparsedLetter = ([String], [[String]])
+type DigitRow = (Letter, Letter, Letter, Letter, Letter, Letter, Letter, Letter, Letter)
 
 checkSum :: [Int] -> CheckSumResult
 checkSum [d9,d8,d7,d6,d5,d4,d3,d2,d1] =
@@ -103,25 +103,32 @@ parse = makeOutput . map matchWith . makeDigitTable . breakIntoThrees
 
 testChecksum = checkSum . rights . map matchWith
 
-includeAlts :: [String] -> UnparsedLetter
-includeAlts [top, mid, bottom] =
-  ([top, mid, bottom], [alternativesTop top, alternativesMid mid, alternativesBottom bottom])
+includeAlts :: LetterStrings -> UnparsedLetter
+includeAlts (top, mid, bottom) =
+  ((top, mid, bottom), (alternativesTop top, alternativesMid mid, alternativesBottom bottom))
 
--- smartparse a =
---   let unparsed = includeAlts . makeDigitTable . breakIntoThrees a
---   in 
+tryTops ((t,m,b), ([], _, _)) = []
+tryTops ((t,m,b), (ts, _, _)) = map matchWith [(head t, m, b)]
+
+allLetterCombos :: [UnparsedLetter] -> [[Letter]]
+allLetterCombos a = map (\((t, m, b), (ts, ms, bs)) -> map matchWith [(t, m, b), (t, head ms, b)]) a
+
+smartparse a =
+  let altsToo = map includeAlts . makeDigitTable . breakIntoThrees $ a
+      combinations = allLetterCombos altsToo
+  in map makeOutput combinations
 
 doer = do
   x <- getFile "input.dt"
   return $ map parse x
 
-tests = do
-  output <- doer
-  return $ ["711111111     ",
-            "123456789     ",
-            "1?3?56789  ILL",
-            "123456781  ERR",
-            "000000051     "] == output
+-- tests = do
+--   output <- doer
+--   return $ ["711111111     ",
+--             "123456789     ",
+--             "1?3?56789  ILL",
+--             "123456781  ERR",
+--             "000000051     "] == output
 
 
 
