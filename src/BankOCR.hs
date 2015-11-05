@@ -35,6 +35,9 @@ alternativesMid "|_|" = ["| |", " _|",  "|_ "]
 alternativesMid " _|" = ["|_|", "  |"]
 alternativesMid "|_ " = ["|_|"]
 alternativesMid "  |" = ["| |", " _|"]
+alternativesMid "   " = ["  |"]
+alternativesMid " _ " = [" _|"]
+alternativesMid a = fail a
 
 alternativesBottom "|_|" = [" _|",  "|_ "]
 alternativesBottom "  |" = [" _|"]
@@ -107,28 +110,42 @@ includeAlts :: LetterStrings -> UnparsedLetter
 includeAlts (top, mid, bottom) =
   ((top, mid, bottom), (alternativesTop top, alternativesMid mid, alternativesBottom bottom))
 
+tryTops :: UnparsedLetter -> [Letter]
 tryTops ((t,m,b), ([], _, _)) = []
-tryTops ((t,m,b), (ts, _, _)) = map matchWith [(head t, m, b)]
+tryTops ((t,m,b), (ts, _, _)) = map Right $ rights $ [matchWith (head ts, m, b)] ++ (tryTops ((t,m,b), (tail ts, [], [])))
+
+tryMids :: UnparsedLetter -> [Letter]
+tryMids ((t,m,b), (_, [], _)) = []
+tryMids ((t,m,b), (_, ms, _)) = map Right $ rights $ [matchWith (t, head ms, b)] ++ (tryMids ((t,m,b), ([], tail ms, [])))
+
+tryBottoms :: UnparsedLetter -> [Letter]
+tryBottoms ((t,m,b), (_, _, [])) = []
+tryBottoms ((t,m,b), (_, _, bs)) = map Right $ rights $ [matchWith (t, m, head bs)] ++ (tryBottoms ((t,m,b), ([], [], tail bs)))
+
+letterGood (Left _) = False
+letterGood (Right _) = True
 
 allLetterCombos :: [UnparsedLetter] -> [[Letter]]
-allLetterCombos a = map (\((t, m, b), (ts, ms, bs)) -> map matchWith [(t, m, b), (t, head ms, b)]) a
+allLetterCombos a = map (\b ->
+                           let rawLetter = matchWith $ fst b
+                           in if letterGood rawLetter then [rawLetter] else tryTops b ++ tryMids b ++ tryBottoms b) a
 
 smartparse a =
   let altsToo = map includeAlts . makeDigitTable . breakIntoThrees $ a
       combinations = allLetterCombos altsToo
-  in map makeOutput combinations
+  in makeOutput . head . sequence $ combinations
 
 doer = do
   x <- getFile "input.dt"
-  return $ map parse x
+  return $ map smartparse x
 
--- tests = do
---   output <- doer
---   return $ ["711111111     ",
---             "123456789     ",
---             "1?3?56789  ILL",
---             "123456781  ERR",
---             "000000051     "] == output
+tests = do
+  output <- doer
+  return $ ["711111111     ",
+            "123456789     ",
+            "123456789     ",
+            "123456781  ERR",
+            "000000051     "] == output
 
 
 
