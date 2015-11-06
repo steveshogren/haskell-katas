@@ -6,6 +6,8 @@ import Data.List(groupBy, sort, foldl)
 import System.Random
 import Control.Applicative
 import Data.Either
+import Control.Lens.Tuple
+import Control.Lens
 
 getFile :: FilePath -> IO [[String]]
 getFile name = liftM (chunksOf 4 . lines) $ readFile name
@@ -110,17 +112,20 @@ includeAlts :: LetterStrings -> UnparsedLetter
 includeAlts (top, mid, bottom) =
   ((top, mid, bottom), (alternativesTop top, alternativesMid mid, alternativesBottom bottom))
 
-tryTops :: UnparsedLetter -> [Letter]
-tryTops ((t,m,b), ([], _, _)) = []
-tryTops ((t,m,b), (ts, _, _)) = map Right $ rights $ [matchWith (head ts, m, b)] ++ (tryTops ((t,m,b), (tail ts, [], [])))
+--tryGen :: (String, String, String) -> (String, String, String) -> [String] -> [Letter]
+tryGen _ _ [] = []
+tryGen getter a ts = [matchWith $ set _1 (head ts) a] ++ (tryGen getter a $ tail ts)
 
-tryMids :: UnparsedLetter -> [Letter]
-tryMids ((t,m,b), (_, [], _)) = []
-tryMids ((t,m,b), (_, ms, _)) = map Right $ rights $ [matchWith (t, head ms, b)] ++ (tryMids ((t,m,b), ([], tail ms, [])))
+tryTops _ [] = []
+tryTops a@(t,m,b) ts = tryGen _1 a ts
 
-tryBottoms :: UnparsedLetter -> [Letter]
-tryBottoms ((t,m,b), (_, _, [])) = []
-tryBottoms ((t,m,b), (_, _, bs)) = map Right $ rights $ [matchWith (t, m, head bs)] ++ (tryBottoms ((t,m,b), ([], [], tail bs)))
+tryMids _ [] = []
+tryMids a@(t,m,b) ms = [matchWith (t, head ms, b)] ++ (tryMids a $ tail ms)
+
+tryBottoms _ [] = []
+tryBottoms a@(t,m,b) bs = [matchWith (t, m, head bs)] ++ (tryBottoms a  $ tail bs)
+
+tryAll (l, (ts, ms, bs)) = map Right $ rights $ tryTops l ts ++ tryMids l ms ++ tryBottoms l bs
 
 letterGood (Left _) = False
 letterGood (Right _) = True
@@ -128,7 +133,7 @@ letterGood (Right _) = True
 allLetterCombos :: [UnparsedLetter] -> [[Letter]]
 allLetterCombos a = map (\b ->
                            let rawLetter = matchWith $ fst b
-                           in if letterGood rawLetter then [rawLetter] else tryTops b ++ tryMids b ++ tryBottoms b) a
+                           in if letterGood rawLetter then [rawLetter] else tryAll b) a
 
 smartparse a =
   let altsToo = map includeAlts . makeDigitTable . breakIntoThrees $ a
@@ -146,8 +151,6 @@ tests = do
             "123456789     ",
             "123456781  ERR",
             "000000051     "] == output
-
-
 
 
 -- Random kata stuff
