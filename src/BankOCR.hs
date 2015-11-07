@@ -1,3 +1,4 @@
+{-# LANGUAGE RankNTypes #-}
 module BankOCR where
 
 import Control.Monad
@@ -112,18 +113,20 @@ includeAlts :: LetterStrings -> UnparsedLetter
 includeAlts (top, mid, bottom) =
   ((top, mid, bottom), (alternativesTop top, alternativesMid mid, alternativesBottom bottom))
 
---tryGen :: (String, String, String) -> (String, String, String) -> [String] -> [Letter]
+type AGetter = Lens (String, String, String) (String, String, String) String String
+
+tryGen :: AGetter -> (String, String, String) -> [String] -> [Letter]
 tryGen _ _ [] = []
-tryGen getter a ts = [matchWith $ set _1 (head ts) a] ++ (tryGen getter a $ tail ts)
+tryGen getter a ts = [matchWith $ set getter (head ts) a] ++ (tryGen getter a $ tail ts)
 
 tryTops _ [] = []
-tryTops a@(t,m,b) ts = tryGen _1 a ts
+tryTops a ts = tryGen _1 a ts
 
 tryMids _ [] = []
-tryMids a@(t,m,b) ms = [matchWith (t, head ms, b)] ++ (tryMids a $ tail ms)
+tryMids a ms = tryGen _2 a ms
 
 tryBottoms _ [] = []
-tryBottoms a@(t,m,b) bs = [matchWith (t, m, head bs)] ++ (tryBottoms a  $ tail bs)
+tryBottoms a bs = tryGen _3 a bs
 
 tryAll (l, (ts, ms, bs)) = map Right $ rights $ tryTops l ts ++ tryMids l ms ++ tryBottoms l bs
 
