@@ -131,29 +131,39 @@ tryBottoms a bs = tryGen _3 a bs
 tryAll (l, (ts, ms, bs)) = map Right $ rights $ tryTops l ts ++ tryMids l ms ++ tryBottoms l bs
 
 letterGood (Left _) = False
-letterGood (Right _) = True
+letterGood (Right l) = True
 
 allLetterCombos :: [UnparsedLetter] -> [[Letter]]
 allLetterCombos a = map (\b ->
                            let rawLetter = matchWith $ fst b
-                           in if letterGood rawLetter then [rawLetter] else tryAll b) a
+                           in [rawLetter] ++ tryAll b) a
+
+findChecksumCombos :: [Letter] -> (CheckSumResult, [Letter])
+findChecksumCombos numbers =  (checkSum numbers, numbers)
+
+filterGood (Valid, nums) = Right nums
+filterGood (Invalid, _) = Left ""
+filterGood (Missing, _) = Left ""
 
 smartparse a =
   let altsToo = map includeAlts . makeDigitTable . breakIntoThrees $ a
       combinations = allLetterCombos altsToo
-  in makeOutput . head . sequence $ combinations
+      goodCombos = map findChecksumCombos combinations
+  in
+    -- makeOutput . head .
+     goodCombos
 
 doer = do
   x <- getFile "input.dt"
   return $ map smartparse x
 
-tests = do
-  output <- doer
-  return $ ["711111111     ",
-            "123456789     ",
-            "123456789     ",
-            "123456781  ERR",
-            "000000051     "] == output
+-- tests = do
+--   output <- doer
+--   return $ ["711111111     ",
+--             "123456789     ",
+--             "123456789     ",
+--             "123456781  ERR",
+--             "000000051     "] == output
 
 
 -- Random kata stuff
