@@ -1,3 +1,4 @@
+{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE RankNTypes #-}
 module BankOCR where
 
@@ -8,6 +9,7 @@ import System.Random
 import Control.Applicative
 import Data.Either
 import Control.Lens.Tuple
+import Data.List.Lens
 import Control.Lens
 
 getFile :: FilePath -> IO [[String]]
@@ -139,19 +141,23 @@ allLetterCombos a = map (\b ->
                            in [rawLetter] ++ tryAll b) a
 
 findChecksumCombos :: [Letter] -> (CheckSumResult, [Letter])
-findChecksumCombos numbers =  (checkSum numbers, numbers)
+findChecksumCombos numbers = (checkSum . rights $ numbers, numbers)
+
+tryCombosFirst all@[a,b,c,d,e,f,g,h,i,j] =
+  let base = (map head all)
+  in map (\n -> base & ix 1 .~ n) a
 
 filterGood (Valid, nums) = Right nums
-filterGood (Invalid, _) = Left ""
-filterGood (Missing, _) = Left ""
+filterGood (Invalid, n) = Left n
+filterGood (Missing, n) = Left n
+
+onlyGood = map filterGood
 
 smartparse a =
   let altsToo = map includeAlts . makeDigitTable . breakIntoThrees $ a
       combinations = allLetterCombos altsToo
-      goodCombos = map findChecksumCombos combinations
-  in
-    -- makeOutput . head .
-     goodCombos
+      goodCombos = onlyGood $ $ map findChecksumCombos $ tryCombosFirst  combinations
+  in combinations -- makeOutput . head .
 
 doer = do
   x <- getFile "input.dt"
