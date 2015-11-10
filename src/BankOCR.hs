@@ -143,33 +143,38 @@ allLetterCombos a = map (\b ->
 findChecksumCombos :: [Letter] -> (CheckSumResult, [Letter])
 findChecksumCombos numbers = (checkSum . rights $ numbers, numbers)
 
-tryCombosFirst all@[a,b,c,d,e,f,g,h,i,j] =
-  let base = (map head all)
-  in map (\n -> base & ix 1 .~ n) a
+tryCombosFirst :: [[a]] -> [[a]]
+tryCombosFirst all =
+  let base = map head all
+  in concat $ zipWith (\idx letters -> map (\each -> base & ix idx .~ each) letters) [0.. ] all
 
 filterGood (Valid, nums) = Right nums
 filterGood (Invalid, n) = Left n
 filterGood (Missing, n) = Left n
 
-onlyGood = map filterGood
+onlyGood = rights . (map filterGood)
+
+removeEmpty :: [[a]] -> [[a]]
+removeEmpty = filter (not.null)
+-- removeEmpty = filter (\x -> x/=[])
 
 smartparse a =
   let altsToo = map includeAlts . makeDigitTable . breakIntoThrees $ a
       combinations = allLetterCombos altsToo
-      goodCombos = onlyGood $ $ map findChecksumCombos $ tryCombosFirst  combinations
-  in combinations -- makeOutput . head .
+      goodCombos = onlyGood $ map findChecksumCombos $ tryCombosFirst $ combinations
+  in (map makeOutput) $ goodCombos -- makeOutput . head . goodCombos
 
 doer = do
   x <- getFile "input.dt"
-  return $ map smartparse x
+  return $ (map head) . removeEmpty $ map smartparse x
 
--- tests = do
---   output <- doer
---   return $ ["711111111     ",
---             "123456789     ",
---             "123456789     ",
---             "123456781  ERR",
---             "000000051     "] == output
+tests = do
+  output <- doer
+  return $ ["711111111     ",
+            "123456789     ",
+            "123456789     ",
+            "123956781     ",
+            "000000051     "] == output
 
 
 -- Random kata stuff
