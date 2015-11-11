@@ -83,14 +83,17 @@ matchWith (" _ ",
 matchWith a = Left ("?", a)
 
 data CheckSumResult = Valid | Invalid | Missing
+  deriving (Show, Eq)
 
 type DigitRow = (Letter, Letter, Letter, Letter, Letter, Letter, Letter, Letter, Letter)
 
 checkSum :: [Int] -> CheckSumResult
-checkSum [d9,d8,d7,d6,d5,d4,d3,d2,d1] =
-   let x = d1 + (2 * d2) + (3 * d3) + (4 * d4) + (5 * d5) + (6 * d6) + (7 * d7) + (8* d8) + (9 * d9)
-   in if mod x 11 == 0 then Valid else Invalid
-checkSum _ = Missing
+
+checkSum a =
+   if 9 == (length a) then
+     let x = foldl (+) 0 $ zipWith (*) a (reverse [1..9])
+     in if mod x 11 == 0 then Valid else Invalid
+   else Missing
 
 printCheckSum :: CheckSumResult -> String
 printCheckSum Valid = "    "
@@ -156,7 +159,6 @@ onlyGood = rights . (map filterGood)
 
 removeEmpty :: [[a]] -> [[a]]
 removeEmpty = filter (not.null)
--- removeEmpty = filter (\x -> x/=[])
 
 smartparse a =
   let altsToo = map includeAlts . makeDigitTable . breakIntoThrees $ a
@@ -175,6 +177,8 @@ tests = do
             "123456789     ",
             "123956781     ",
             "000000051     "] == output
+    && checkSum [7,1,1,1,1,1,1,1,1] == Valid
+    && checkSum [1,1,1,1,1,1,1,1,1] == Invalid
 
 
 -- Random kata stuff
