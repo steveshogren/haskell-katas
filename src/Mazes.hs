@@ -9,7 +9,7 @@ import Data.Functor
 import qualified System.Random as Rand
 
 type Cell = (Integer,Integer)
-type Board = Map.Map Cell Bool
+type Board = Map.Map Cell Char
 
 maxX :: Integer
 maxX = 50
@@ -41,13 +41,15 @@ emptyBoard :: Board
 emptyBoard =
   let m = Map.empty
       coords = [(x,y) | x <- [0..maxX], y <- [0..maxY]]
-  in foldl (\m k -> Map.insert k False m) m coords
+  in foldl (\m k -> Map.insert k ' ' m) m coords
 
-toChar :: Bool -> String
-toChar x = if x then "a" else " "
+toChar :: Maybe Char -> Char
+toChar = Maybe.fromMaybe ' '
 
-toBool :: Maybe Bool -> Bool
-toBool = Maybe.fromMaybe False
+toBool :: Maybe Char -> Bool
+toBool c =
+  let char = Maybe.fromMaybe ' ' c
+  in if char == ' ' then False else True
 
 occupied :: Board -> Cell -> Bool
 occupied b c = toBool . Map.lookup c $ b
@@ -56,7 +58,7 @@ toStringRow :: Board -> Integer -> String
 toStringRow m y =
   let ks = Map.keys m
       topRow = filter ((==y).getY) ks
-      topString = foldl (\ret k -> ret++(toChar . occupied m $ k)) "" topRow
+      topString = foldl (\ret k -> ret++[(toChar . Map.lookup k $ m)]) "" topRow
   in topString
 
 toStringMap :: Board -> [String]
@@ -84,17 +86,18 @@ hasOnlyOneNeighbor b c =
 goodNeighborCells :: Board -> Cell -> [Cell]
 goodNeighborCells b c = filter (hasOnlyOneNeighbor b) $ neighborCells c
 
-growStep :: (Board,Cell) -> t -> IO (Board, Cell)
-growStep (b, c) _ =
+growStep :: (Board,Cell) -> Char -> IO (Board, Cell)
+growStep (b, c) l =
   let alts = goodNeighborCells b c
   in if (length alts == 0) || (c == (19,6)) then return (b,c)
   else
     let next = pick alts
-    in (\n -> (Map.insert n True b, n)) <$> next
+    in (\n -> (Map.insert n l b, n)) <$> next
 
 grower :: IO [()]
 grower =
   let empty = emptyBoard
-      m = foldM growStep (empty, (1,1)) [0..200]
+      letters = zipWith (\n c -> c) [0..200] $ concat ([['a'..'z'] | x <- [0..]])
+      m = foldM growStep (empty, (1,1)) letters
   in m >>= (\(b, _) -> printBoard b)
 
