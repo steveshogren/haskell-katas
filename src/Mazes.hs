@@ -12,9 +12,9 @@ type Cell = (Integer,Integer)
 type Board = Map.Map Cell Bool
 
 maxX :: Integer
-maxX = 20
+maxX = 50
 maxY :: Integer
-maxY = 7
+maxY = 10
 getX :: (a, b) -> a
 getX = fst
 getY :: (a, b) -> b
@@ -24,6 +24,9 @@ inc :: Integer -> Integer
 inc = (+1)
 dec :: Num a => a -> a
 dec x = x - 1
+
+pick :: [a] -> IO a
+pick x = return.(x!!)=<<Rand.randomRIO(0,length x-1)
 
 deltaX :: (b, b1) -> (b -> t) -> (t, b1)
 deltaX cell d =
@@ -46,43 +49,52 @@ toChar x = if x then "a" else " "
 toBool :: Maybe Bool -> Bool
 toBool = Maybe.fromMaybe False
 
+occupied :: Board -> Cell -> Bool
+occupied b c = toBool . Map.lookup c $ b
+
 toStringRow :: Board -> Integer -> String
 toStringRow m y =
   let ks = Map.keys m
       topRow = filter ((==y).getY) ks
-      topString = foldl (\ret k -> ret++((toChar . toBool . Map.lookup k) m)) "" topRow
+      topString = foldl (\ret k -> ret++(toChar . occupied m $ k)) "" topRow
   in topString
 
 toStringMap :: Board -> [String]
 toStringMap m =
-  map (\y -> toStringRow m y) [0..7]
+  map (\y -> toStringRow m y) [0..maxY]
 
-printBoard board =
-  sequence . (map putStrLn) $ toStringMap board
+printBoard :: Board -> IO [()]
+printBoard b =
+  sequence . (map putStrLn) $ toStringMap b
 
-nextAlternatives :: Cell -> [Cell]
-nextAlternatives cell =
+neighborCells :: Cell -> [Cell]
+neighborCells cell =
   let right = if (getX cell == maxX) then [] else [deltaX cell inc]
       left = if (getX cell == 0) then [] else [deltaX cell dec]
       up = if (getY cell == 0) then [] else [deltaY cell dec]
       down = if (getY cell == maxY) then [] else [deltaY cell inc]
   in right ++ left ++ up ++ down
 
-growStep (board, currentCell) _ =
-  let alts = nextAlternatives currentCell
-      random = Rand.randomRIO (0, length alts - 1)
-      next =  ((!!) alts) <$> random
-  in (\n -> (Map.insert n True board, n)) <$> next
+hasOnlyOneNeighbor :: Board -> Cell -> Bool
+hasOnlyOneNeighbor b c =
+  let alts = neighborCells c
+      neighbors = filter (occupied b) alts
+  in length neighbors < 2
 
+goodNeighborCells :: Board -> Cell -> [Cell]
+goodNeighborCells b c = filter (hasOnlyOneNeighbor b) $ neighborCells c
+
+growStep :: (Board,Cell) -> t -> IO (Board, Cell)
+growStep (b, c) _ =
+  let alts = goodNeighborCells b c
+  in if (length alts == 0) || (c == (19,6)) then return (b,c)
+  else
+    let next = pick alts
+    in (\n -> (Map.insert n True b, n)) <$> next
+
+grower :: IO [()]
 grower =
   let empty = emptyBoard
-      m = foldM growStep (empty, (0,0)) [0..10]
-  in m >>= (\(board, _) -> printBoard board)
+      m = foldM growStep (empty, (1,1)) [0..200]
+  in m >>= (\(b, _) -> printBoard b)
 
-
-generate :: IO ()
-generate = do
-  putStrLn "abcdef                           "
-  putStrLn "     g                           "
-  putStrLn "     h                           "
-  putStrLn "     ijklmnopqrstuvwxyzabcdefghij"
