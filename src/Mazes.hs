@@ -101,3 +101,5 @@ grower =
       m = foldM growStep (empty, (1,1)) letters
   in m >>= (\(b, _) -> printBoard b)
 
+someBoards =
+  sequence $ map (\x -> grower >> putStrLn "-----------------------------") [1..10]
