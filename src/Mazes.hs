@@ -12,9 +12,9 @@ type Cell = (Integer,Integer)
 type Board = Map.Map Cell Char
 
 maxX :: Integer
-maxX = 50
+maxX = 60
 maxY :: Integer
-maxY = 10
+maxY = 16
 getX :: (a, b) -> a
 getX = fst
 getY :: (a, b) -> b
@@ -86,20 +86,24 @@ hasOnlyOneNeighbor b c =
 goodNeighborCells :: Board -> Cell -> [Cell]
 goodNeighborCells b c = filter (hasOnlyOneNeighbor b) $ neighborCells c
 
-growStep :: (Board,Cell) -> Char -> IO (Board, Cell)
-growStep (b, c) l =
+growStep :: (Board,Cell, Int) -> Char -> IO (Board, Cell, Int)
+growStep (b, c, count) l =
   let alts = goodNeighborCells b c
-  in if (length alts == 0) || (c == (19,6)) then return (b,c)
+  in if (length alts == 0) || (c == (19,6)) then return (b,c, count)
   else
     let next = pick alts
-    in (\n -> (Map.insert n l b, n)) <$> next
+    in (\n -> (Map.insert n l b, n, count+1)) <$> next
 
-grower :: IO [()]
-grower =
+growerBoard :: IO Board
+growerBoard = do
   let empty = emptyBoard
-      letters = zipWith (\n c -> c) [0..200] $ concat ([['a'..'z'] | x <- [0..]])
-      m = foldM growStep (empty, (1,1)) letters
-  in m >>= (\(b, _) -> printBoard b)
+      letters = zipWith (\_ c -> c) [0..200] $ concat ([['a'..'z'] | _ <- [0..]])
+  (b,_,count) <- foldM growStep (empty, (1,1), 0) letters
+  if count > 70 then return b else growerBoard
+
+grower = do
+  b <- growerBoard
+  printBoard b
 
 someBoards =
-  sequence $ map (\x -> grower >> putStrLn "-----------------------------") [1..10]
+  sequence $ map (\x -> grower >> putStrLn "-----------------------------") [1..2]
