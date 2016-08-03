@@ -77,14 +77,26 @@ neighborCells cell =
       down = if (getY cell == maxY) then [] else [deltaY cell inc]
   in right ++ left ++ up ++ down
 
+allNeighborCells :: Cell -> [Cell]
+allNeighborCells cell =
+  let right = if (getX cell == maxX) then [] else [deltaX cell inc]
+      left = if (getX cell == 0) then [] else [deltaX cell dec]
+      up = if (getY cell == 0) then [] else [deltaY cell dec]
+      down = if (getY cell == maxY) then [] else [deltaY cell inc]
+      upright = if (getY cell == 0 && getX cell == maxX) then [] else [(inc . getX $ cell, dec . getY $ cell)]
+      upleft = if (getY cell == 0 && getX cell == 0) then [] else [(dec . getX $ cell, dec . getY $ cell)]
+      downleft = if (getY cell == maxY && getX cell == 0) then [] else [(dec . getX $ cell, inc . getY $ cell)]
+      downright = if (getY cell == maxY && getX cell == maxX) then [] else [(inc . getX $ cell, inc . getY $ cell)]
+  in right ++ left ++ up ++ down ++ upright ++ upleft ++ downleft ++ downright
+
 hasOnlyOneNeighbor :: Board -> Cell -> Bool
 hasOnlyOneNeighbor b c =
-  let alts = neighborCells c
+  let alts = allNeighborCells c
       neighbors = filter (occupied b) alts
-  in length neighbors < 2
+  in length neighbors < 3
 
 goodNeighborCells :: Board -> Cell -> [Cell]
-goodNeighborCells b c = filter (hasOnlyOneNeighbor b) $ neighborCells c
+goodNeighborCells b c = filter (\c -> (not . occupied b $ c) && hasOnlyOneNeighbor b c) $ neighborCells c
 
 growStep :: (Board,Cell, Int) -> Char -> IO (Board, Cell, Int)
 growStep (b, c, count) l =
@@ -99,7 +111,7 @@ growerBoard = do
   let empty = emptyBoard
       letters = zipWith (\_ c -> c) [0..200] $ concat ([['a'..'z'] | _ <- [0..]])
   (b,_,count) <- foldM growStep (empty, (1,1), 0) letters
-  if count > 70 then return b else growerBoard
+  if count > 200 then return b else growerBoard
 
 grower = do
   b <- growerBoard
