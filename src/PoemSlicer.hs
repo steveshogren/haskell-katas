@@ -8,26 +8,42 @@ import Data.List
 import qualified Data.Map as M
 import qualified System.Random.Shuffle as Rand
 
-
 lineSize = 2
+totalLineSize = 2 + lineSize
 
+grouped :: [e] -> [[e]]
 grouped = chunksOf lineSize
 
+poemLines :: FilePath -> IO [String]
 poemLines fileName = do
   source <- readFile fileName
   return $ lines source
 
 makeDict n = do
-  rvs <- Rand.shuffleM [2..n+2]
-  let kvs = zip [2..n+2] rvs
+  rvs <- Rand.shuffleM [2..n+1]
+  let kvs = zip [2..n+1] rvs
       randed = foldl (\m (k,v) -> M.insert k v m) M.empty kvs
   return randed
 
+updateLine
+  :: (Num t, Num t2, Ord t) =>
+     M.Map t t2 -> (t1, t, t) -> (t1, t2, t2)
 updateLine d (str, current, next) =
-  let c = fromMaybe 0 $ M.lookup current d
-      n = fromMaybe 0 $ M.lookup next d
+  let c = fromMaybe 0 $ M.lookup (current-1) d
+      n = fromMaybe 0 $ M.lookup (next-1) d
   in (str, c, n)
 
+printLine :: (Num a, Show a, Traversable t1) => (t1 String, t, Int) -> IO ()
+printLine (s, _, goto) = do
+  mapM putStrLn s
+  putStrLn $ "   -> "  ++ (show (goto*totalLineSize))
+  putStrLn " "
+
+printOneLine :: (Show a, Show a1) => (a, t, a1) -> IO ()
+printOneLine (s, _, goto) =
+  putStrLn ((show s) ++ " -> " ++ (show goto))
+
+main :: IO [()]
 main = do
   lines <- poemLines "poem.txt"
   let output = zip3 (grouped lines) [2..] [3..]
@@ -38,5 +54,7 @@ main = do
       (s,c,n) = head output
       (_,secondLineNum,_) = head o
       firstLine = (s,1, secondLineNum)
-      sorted = sortBy (comparing (\(_,k,_) -> k))  ([firstLine] ++ o)
-  mapM (putStrLn . show) sorted
+      allLines = ([firstLine] ++ o)
+      sorted = sortBy (comparing (\(_,k,_) -> k))  allLines
+      vals = map (\(a,b,c) -> (b, c)) sorted
+  mapM printLine sorted
