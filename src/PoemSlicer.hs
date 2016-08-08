@@ -3,12 +3,13 @@ module PoemSlicer where
 
 import Data.List.Split
 import Data.Maybe
+import qualified System.IO as IO
 import Data.Ord
 import Data.List
 import qualified Data.Map as M
 import qualified System.Random.Shuffle as Rand
 
-lineSize = 2
+lineSize = 1
 totalLineSize = 2 + lineSize
 
 grouped :: [e] -> [[e]]
@@ -39,13 +40,19 @@ printLine (s, _, goto) = do
   putStrLn $ "   -> "  ++ (show (goto*totalLineSize))
   putStrLn " "
 
+groupLine :: ([String], t, Int) -> [String]
+groupLine (s, _, goto) = s ++ ["   -> "  ++ (show (goto*totalLineSize)), " "]
+
 printOneLine :: (Show a, Show a1) => (a, t, a1) -> IO ()
 printOneLine (s, _, goto) =
   putStrLn ((show s) ++ " -> " ++ (show goto))
 
-main :: IO [()]
+writePoem :: [String] -> IO ()
+writePoem = IO.writeFile "/home/jack/programming/vimtutor/files/linenumbers/because_i_could_not_stop_for_death.txt" . unlines
+
+main :: IO ()
 main = do
-  lines <- poemLines "poem.txt"
+  lines <- poemLines "/home/jack/programming/vimtutor/poems/because_i_could_not_stop_for_death.txt"
   let output = zip3 (grouped lines) [2..] [3..]
       outMissingFirst = drop 1 output
       size = length outMissingFirst
@@ -57,4 +64,4 @@ main = do
       allLines = ([firstLine] ++ o)
       sorted = sortBy (comparing (\(_,k,_) -> k))  allLines
       vals = map (\(a,b,c) -> (b, c)) sorted
-  mapM printLine sorted
+  writePoem $ concatMap groupLine sorted
