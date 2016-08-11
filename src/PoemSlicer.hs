@@ -31,10 +31,16 @@ updateLine d (str, current, next) =
       n = fromMaybe 0 $ M.lookup (next-1) d
   in (str, c, n)
 
+padLines lineSize lines =
+  if length lines /= lineSize then
+    lines ++ (map (\s -> " ") [1..(lineSize-length lines)])
+  else lines
+
 groupLine :: Int -> ([String], t, Int) -> [String]
 groupLine lineSize (s, _, goto) =
   let totalSize = (totalLineSize lineSize)
-  in s ++ ["   -> "  ++ (show (goto*totalSize)), " "]
+      lines = padLines lineSize s
+  in lines ++ ["   -> "  ++ (show (goto*totalSize)), " "]
 
 printOneLine :: (Show a, Show a1) => (a, t, a1) -> IO ()
 printOneLine (s, _, goto) =
