@@ -9,11 +9,8 @@ import Data.List
 import qualified Data.Map as M
 import qualified System.Random.Shuffle as Rand
 
-lineSize = 1
-totalLineSize = 2 + lineSize
-
-grouped :: [e] -> [[e]]
-grouped = chunksOf lineSize
+--lineSize = 1
+totalLineSize = (2 +)
 
 poemLines :: FilePath -> IO [String]
 poemLines fileName = do
@@ -34,14 +31,10 @@ updateLine d (str, current, next) =
       n = fromMaybe 0 $ M.lookup (next-1) d
   in (str, c, n)
 
-printLine :: (Num a, Show a, Traversable t1) => (t1 String, t, Int) -> IO ()
-printLine (s, _, goto) = do
-  mapM putStrLn s
-  putStrLn $ "   -> "  ++ (show (goto*totalLineSize))
-  putStrLn " "
-
-groupLine :: ([String], t, Int) -> [String]
-groupLine (s, _, goto) = s ++ ["   -> "  ++ (show (goto*totalLineSize)), " "]
+groupLine :: Int -> ([String], t, Int) -> [String]
+groupLine lineSize (s, _, goto) =
+  let totalSize = (totalLineSize lineSize)
+  in s ++ ["   -> "  ++ (show (goto*totalSize)), " "]
 
 printOneLine :: (Show a, Show a1) => (a, t, a1) -> IO ()
 printOneLine (s, _, goto) =
@@ -50,10 +43,15 @@ printOneLine (s, _, goto) =
 writePoem :: [String] -> IO ()
 writePoem = IO.writeFile "/home/jack/programming/vimtutor/files/linenumbers/because_i_could_not_stop_for_death.txt" . unlines
 
+groupSize :: String -> Int
+groupSize headLine = read headLine
+
 main :: IO ()
 main = do
   lines <- poemLines "/home/jack/programming/vimtutor/poems/because_i_could_not_stop_for_death.txt"
-  let output = zip3 (grouped lines) [2..] [3..]
+  let poemLines = tail lines
+      grpSize = groupSize . head $ lines
+      output = zip3 (chunksOf grpSize poemLines) [2..] [3..]
       outMissingFirst = drop 1 output
       size = length outMissingFirst
   d <- makeDict size
@@ -64,4 +62,4 @@ main = do
       allLines = ([firstLine] ++ o)
       sorted = sortBy (comparing (\(_,k,_) -> k))  allLines
       vals = map (\(a,b,c) -> (b, c)) sorted
-  writePoem $ concatMap groupLine sorted
+  writePoem $ concatMap (groupLine grpSize) sorted
