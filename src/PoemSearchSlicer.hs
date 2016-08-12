@@ -2,6 +2,7 @@
 module PoemSearchSlicer where
 
 import Data.List.Split
+import System.Directory
 import Data.Maybe
 import qualified System.IO as IO
 import Data.Ord
@@ -45,24 +46,26 @@ groupLine words lineSize (s, currentLine, nextLine) =
   let lines = padLines lineSize s
       nextString = (filter (/='"') (words !! nextLine))
       currentString = (filter (/='"') (words !! currentLine))
-      firstLine =  currentString ++ (show currentLine) ++ head lines
-      ls = [firstLine] ++ (drop 1 lines)
-  in ls ++ ["   -> "  ++ (nextString  ++ (show nextLine)), " "]
+  in lines ++ [currentString ++ (show currentLine) ++  "   -> "  ++ (nextString  ++ (show nextLine)), " "]
 
 printOneLine :: (Show a, Show a1) => (a, t, a1) -> IO ()
 printOneLine (s, _, goto) =
   putStrLn ((show s) ++ " -> " ++ (show goto))
 
-writePoem :: [String] -> IO ()
-writePoem = IO.writeFile "/home/jack/programming/vimtutor/files/search/because_i_could_not_stop_for_death.txt" . unlines
+writePoem :: String -> [String] -> IO ()
+writePoem f = IO.writeFile ("/home/jack/programming/vimtutor/files/search/" ++ f) . unlines
 
 groupSize :: String -> Int
 groupSize headLine = read headLine
 
-main :: IO ()
-main = do
+allFiles = do
+  fs <- getDirectoryContents $ "/home/jack/programming/vimtutor/poems/"
+  return $ (filter (/="..")) . (filter (/=".")) $ fs
+
+doAFile :: String -> IO ()
+doAFile f = do
   words <- randomWords "words.txt"
-  lines <- poemLines "/home/jack/programming/vimtutor/poems/because_i_could_not_stop_for_death.txt"
+  lines <- poemLines ("/home/jack/programming/vimtutor/poems/" ++ f)
   let poemLines = tail lines
       grpSize = groupSize . head $ lines
       output = zip3 (chunksOf grpSize poemLines) [2..] [3..]
@@ -76,4 +79,8 @@ main = do
       allLines = ([firstLine] ++ o)
       sorted = sortBy (comparing (\(_,k,_) -> k))  allLines
       vals = map (\(a,b,c) -> (b, c)) sorted
-  writePoem $ concatMap (groupLine words grpSize) sorted
+  writePoem f $ concatMap (groupLine words grpSize) sorted
+
+main = do
+  files <- allFiles
+  mapM doAFile files
