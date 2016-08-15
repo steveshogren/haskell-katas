@@ -9,6 +9,8 @@ import Data.Ord
 import Data.List
 import qualified Data.Map as M
 import qualified System.Random.Shuffle as Rand
+import System.Random
+import Control.Monad (filterM)
 
 randomWords :: FilePath -> IO [String]
 randomWords fileName = do
@@ -91,6 +93,26 @@ doAFile f = do
   (writeLinNumPoem f $ concatMap (displayLinNum grpSize) sorted)
     >> (writeSearchPoem f $ concatMap (displaySearch words grpSize) sorted)
 
+main :: IO [()]
 main = do
   files <- allFiles
   mapM doAFile files
+
+flipCoin :: IO Int
+flipCoin =  getStdRandom (randomR (1,2))
+
+shouldKeep :: IO Bool
+shouldKeep = do
+  roll <- flipCoin
+  return $ if (roll == 1) then True else False
+
+filterOutAOrB :: Int -> Int -> (Int -> IO Bool)
+filterOutAOrB a b n = do
+   shouldKeep <- shouldKeep
+   return ((n /= a && n /= b) || (shouldKeep && ((n == b ) || (n == a))))
+
+appendInsertFile :: Int -> Int -> IO ()
+appendInsertFile a b = do
+  nums <- filterM (filterOutAOrB a b) [1..9]
+  IO.writeFile ("/home/jack/programming/vimtutor/files/append-insert-file.txt") $ (concatMap show nums)
+
