@@ -10,7 +10,7 @@ import Data.List
 import qualified Data.Map as M
 import qualified System.Random.Shuffle as Rand
 import System.Random
-import Control.Monad (filterM)
+import Control.Monad (filterM, mapM)
 
 randomWords :: FilePath -> IO [String]
 randomWords fileName = do
@@ -111,8 +111,14 @@ filterOutAOrB a b n = do
    shouldKeep <- shouldKeep
    return ((n /= a && n /= b) || (shouldKeep && ((n == b ) || (n == a))))
 
-appendInsertFile :: Int -> Int -> IO ()
-appendInsertFile a b = do
-  nums <- filterM (filterOutAOrB a b) [1..9]
+buildRow :: Int -> Int -> IO [Int]
+buildRow a b = filterM (filterOutAOrB a b) [1..9]
+
+buildNumberSection :: Int -> IO [[Int]]
+buildNumberSection num = mapM (\_ -> buildRow (num-1) (num+1)) [1..9]
+
+appendInsertFile :: IO ()
+appendInsertFile = do
+  nums <- mapM buildNumberSection [1..9]
   IO.writeFile ("/home/jack/programming/vimtutor/files/append-insert-file.txt") $ (concatMap show nums)
 
