@@ -117,8 +117,12 @@ buildRow a b = filterM (filterOutAOrB a b) [1..9]
 buildNumberSection :: Int -> IO [[Int]]
 buildNumberSection num = mapM (\_ -> buildRow (num-1) (num+1)) [1..9]
 
+printSection :: [[Int]] -> String
+printSection numLists =
+  concatMap (\l -> show l ++ "\n") numLists
+
 appendInsertFile :: IO ()
 appendInsertFile = do
   nums <- mapM buildNumberSection [1..9]
-  IO.writeFile ("/home/jack/programming/vimtutor/files/append-insert-file.txt") $ (concatMap show nums)
+  IO.writeFile ("/home/jack/programming/vimtutor/files/append-insert-file.txt") $ (concatMap printSection nums)
 
