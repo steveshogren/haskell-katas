@@ -9,14 +9,15 @@ import Data.Ord
 import Data.List
 import qualified Data.Map as M
 import qualified System.Random.Shuffle as Rand
-import System.Random
-import Control.Monad 
+import Control.Monad.Random
+import Control.Monad
 
 randomWords :: FilePath -> IO [String]
 randomWords fileName = do
   source <- readFile fileName
   return $ lines source
 
+totalLineSize :: Int -> Int
 totalLineSize = (2 +)
 
 poemLines :: FilePath -> IO [String]
@@ -24,6 +25,7 @@ poemLines fileName = do
   source <- readFile fileName
   return $ lines source
 
+makeDict :: (Enum a, Num a, Ord a, MonadRandom m) => a -> m (M.Map a a)
 makeDict n = do
   rvs <- Rand.shuffleM [2..n+1]
   let kvs = zip [2..n+1] rvs
@@ -38,6 +40,7 @@ updateLine d (str, current, next) =
       n = fromMaybe 0 $ M.lookup (next-1) d
   in (str, c, n)
 
+padLines :: Int -> [String] -> [String]
 padLines lineSize lines =
   if length lines /= lineSize then
     lines ++ (map (\s -> " ") [1..(lineSize-length lines)])
@@ -60,15 +63,19 @@ printOneLine :: (Show a, Show a1) => (a, t, a1) -> IO ()
 printOneLine (s, _, goto) =
   putStrLn ((show s) ++ " -> " ++ (show goto))
 
+outDir :: String
+outDir = "/home/jack/programming/vimtutor/files/"
+
 writeLinNumPoem :: String -> [String] -> IO ()
-writeLinNumPoem f = IO.writeFile ("/home/jack/programming/vimtutor/files/linenumbers/" ++ f) . unlines
+writeLinNumPoem f = IO.writeFile (outDir ++ "linenumbers/" ++ f) . unlines
 
 writeSearchPoem :: String -> [String] -> IO ()
-writeSearchPoem f = IO.writeFile ("/home/jack/programming/vimtutor/files/search/" ++ f) . unlines
+writeSearchPoem f = IO.writeFile (outDir ++ "search/" ++ f) . unlines
 
 groupSize :: String -> Int
 groupSize headLine = read headLine
 
+allFiles :: IO [FilePath]
 allFiles = do
   fs <- getDirectoryContents $ "/home/jack/programming/vimtutor/poems/"
   return $ (filter (/="..")) . (filter (/=".")) $ fs
@@ -108,8 +115,8 @@ shouldKeep = do
 
 filterOutAOrB :: Int -> Int -> (Int -> IO Bool)
 filterOutAOrB a b n = do
-   shouldKeep <- shouldKeep
-   return ((n /= a && n /= b) || (shouldKeep && ((n == b ) || (n == a))))
+   keep <- shouldKeep
+   return ((n /= a && n /= b) || (keep && ((n == b ) || (n == a))))
 
 buildRow :: Int -> Int -> IO [Int]
 buildRow a b = filterM (filterOutAOrB a b) [1..9]
@@ -122,10 +129,10 @@ printSection numLists =
   concatMap (\l -> (concatMap show l) ++ "\n") numLists
 
 writeAppendInsertFile :: String -> IO ()
-writeAppendInsertFile = IO.writeFile ("/home/jack/programming/vimtutor/files/append-insert-file.txt")
+writeAppendInsertFile = IO.writeFile (outDir ++ "append-insert-file.txt")
 
 appendInsertFile :: IO ()
 appendInsertFile = do
-  nums <- mapM buildNumberSection [2..9]
+  nums <- mapM buildNumberSection [2..8]
   writeAppendInsertFile $ concatMap (\(num, section) -> "\n-------\nSearch For " ++ num ++ "\n\n" ++ printSection section) $ nums
 
