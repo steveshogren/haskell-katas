@@ -20,8 +20,8 @@ randomWords fileName = do
 totalLineSize :: Int -> Int
 totalLineSize = (2 +)
 
-poemLines :: FilePath -> IO [String]
-poemLines fileName = do
+fileContents :: FilePath -> IO [String]
+fileContents fileName = do
   source <- readFile fileName
   return $ lines source
 
@@ -75,17 +75,18 @@ writeSearchPoem f = IO.writeFile (outDir ++ "search/" ++ f) . unlines
 groupSize :: String -> Int
 groupSize headLine = read headLine
 
+poemInputDir :: FilePath
+poemInputDir =  "/home/jack/programming/vimtutor/poems/"
+
 allFiles :: IO [FilePath]
-allFiles = do
-  fs <- getDirectoryContents $ "/home/jack/programming/vimtutor/poems/"
-  return $ (filter (/="..")) . (filter (/=".")) $ fs
+allFiles = (filter (/="..")) . (filter (/=".")) <$> getDirectoryContents poemInputDir
 
 doAFile :: String -> IO ()
 doAFile f = do
-  words <- randomWords "words.txt"
-  lines <- poemLines ("/home/jack/programming/vimtutor/poems/" ++ f)
-  let poemLines = tail lines
-      grpSize = groupSize . head $ lines
+  randWords <- randomWords "words.txt"
+  ls <- fileContents (poemInputDir ++ f)
+  let poemLines = tail ls
+      grpSize = groupSize . head $ ls
       output = zip3 (chunksOf grpSize poemLines) [2..] [3..]
       outMissingFirst = drop 1 output
       size = length outMissingFirst
@@ -98,7 +99,7 @@ doAFile f = do
       sorted = sortBy (comparing (\(_,k,_) -> k))  allLines
       vals = map (\(a,b,c) -> (b, c)) sorted
   (writeLinNumPoem f $ concatMap (displayLinNum grpSize) sorted)
-    >> (writeSearchPoem f $ concatMap (displaySearch words grpSize) sorted)
+    >> (writeSearchPoem f $ concatMap (displaySearch randWords grpSize) sorted)
 
 main :: IO [()]
 main = do
