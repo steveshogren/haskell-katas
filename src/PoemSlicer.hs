@@ -57,7 +57,9 @@ displaySearch words lineSize (s, currentLine, nextLine) =
   let lines = padLines lineSize s
       nextString = (filter (/='"') (words !! nextLine))
       currentString = (filter (/='"') (words !! currentLine))
-  in lines ++ [currentString ++ (show currentLine) ++  "   -> "  ++ (nextString  ++ (show nextLine)), " "]
+      currentTag = currentString ++ (show currentLine)
+      nextTag = nextString ++ (show nextLine)
+  in ["====\n" ++ currentTag ++ "\n"] ++ lines ++ ["   -> "  ++ nextTag ++ "\n"]
 
 printOneLine :: (Show a, Show a1) => (a, t, a1) -> IO ()
 printOneLine (s, _, goto) =
