@@ -1,44 +1,35 @@
 module BookCalendar where
 
 import Data.Time
-import Data.Time.Format
-import Control.Monad
-import Control.Applicative
 
-day :: (t, t1, t2) -> t2
-day (_, _, d) = d
+currentWordCount :: Integer
+currentWordCount = 9048
+
+wordsPerDay :: Integer
+wordsPerDay = 333
+
+isSat :: FormatTime t => t -> Bool
+isSat d = formatTime defaultTimeLocale "%a" d == "Sat"
 
 addToDay :: UTCTime -> Integer -> Day
 addToDay today days =
-  addDays days . utctDay $ today
+  let d = addDays days . utctDay $ today
+  in if isSat d then addToDay today (days+ 2)
+     else d
 
+printDay :: FormatTime t => t -> String
 printDay d = formatTime defaultTimeLocale "   %a - %b %e %Y" d
 
+buildDate :: Integer -> UTCTime -> Integer -> [Char]
 buildDate goal today daysFuture =
   let dayNumber = addToDay today daysFuture
-  in (show ((goal * daysFuture) + 2012)) ++ printDay dayNumber
+  in (show ((goal * daysFuture) + currentWordCount)) ++ printDay dayNumber
 
+dailyCounts :: Integer -> UTCTime -> [[Char]]
 dailyCounts goal today =
  fmap (buildDate goal today) [1..35]
-
--- patrick mentioned clojure juxt does the same signiture as haskell fmap ($ a)
--- which is like [a -> b] -> a -> [b]
-testDollar :: [Integer]
-testDollar = fmap ($ 4) [(1 +), (3 -), (4 *)] 
-
-fizzer :: (Integral a, Show a) => a -> String
-fizzer number =
-  if rem number 3 /= 0 && rem number 5 /= 0
-  then show number
-  else
-    let f = if rem number 3 == 0 then "fizz" else ""
-        b = if rem number 5 == 0 then "buzz" else ""
-        in f ++ b
-
-fizzbuzz :: [String]
-fizzbuzz = map fizzer [1..100]
 
 main :: IO [()]
 main = do
   today <- getCurrentTime
-  sequence $ map (putStrLn . show) $ dailyCounts 333 today
+  sequence $ map (putStrLn . show) $ dailyCounts wordsPerDay today

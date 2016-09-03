@@ -113,9 +113,11 @@ growerBoard = do
   (b,_,count) <- foldM growStep (empty, (1,1), 0) letters
   if count > 200 then return b else growerBoard
 
+grower :: IO [()]
 grower = do
   b <- growerBoard
   printBoard b
 
+someBoards :: IO [()]
 someBoards =
-  sequence $ map (\x -> grower >> putStrLn "-----------------------------") [1..2]
+  sequence $ map (\_ -> grower >> putStrLn "-----------------------------") [1..2]
