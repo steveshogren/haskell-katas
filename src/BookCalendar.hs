@@ -8,14 +8,13 @@ currentWordCount = 9048
 wordsPerDay :: Integer
 wordsPerDay = 333
 
-isSat :: FormatTime t => t -> Bool
-isSat d = formatTime defaultTimeLocale "%a" d == "Sat"
+isWeekend :: FormatTime t => t -> Bool
+isWeekend d =
+  let da = formatTime defaultTimeLocale "%a" d
+  in da == "Sat" || da == "Sun"
 
 addToDay :: UTCTime -> Integer -> Day
-addToDay today days =
-  let d = addDays days . utctDay $ today
-  in if isSat d then addToDay today (days+ 2)
-     else d
+addToDay today days = addDays days . utctDay $ today
 
 printDay :: FormatTime t => t -> String
 printDay d = formatTime defaultTimeLocale "   %a - %b %e %Y" d
@@ -27,7 +26,7 @@ buildDate goal today daysFuture =
 
 dailyCounts :: Integer -> UTCTime -> [[Char]]
 dailyCounts goal today =
- fmap (buildDate goal today) [1..35]
+ fmap (buildDate goal today) $ filter (\n -> not $ isWeekend $ addToDay today n ) [1..35]
 
 main :: IO [()]
 main = do
