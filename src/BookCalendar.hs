@@ -4,7 +4,7 @@ import Data.Time
 import Data.Time.Calendar.WeekDate
 
 currentWordCount :: Integer
-currentWordCount = 11326
+currentWordCount = 14700
 
 wordsPerDay :: Integer
 wordsPerDay = 333
