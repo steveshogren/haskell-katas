@@ -1,15 +1,65 @@
 module TicTacToe where
 
 import qualified Data.Map as M
+import Data.Maybe
 
 type AsMap = M.Map Cell State
 
 data State = One | Two | Empty
 type Cell = (Integer,Integer)
+data Player = O | T
 data TwoMove = TwoMove (Cell, OneMove) | TNone
 data OneMove = OneMove (Cell, TwoMove) | ONone
 data Move = OMove OneMove
             | TMove TwoMove
+
+data Game = Finished Move Player
+            | Unfinished Move
+
+areSameAndSet :: Cell -> Cell -> Cell -> AsMap -> Bool
+areSameAndSet c1 c2 c3 m =
+  let o = getCell c1 m
+      t = getCell c2 m
+      th = getCell c3  m
+  in o /= " " && (o == t) && (o == th)
+
+diagsSameRight :: AsMap -> Bool
+diagsSameRight m = areSameAndSet (0,2) (1,1) (2,0) m
+
+diagsSameLeft :: AsMap -> Bool
+diagsSameLeft m = areSameAndSet (0,0) (1,1) (2,2) m
+
+vertSame :: Integer -> AsMap -> Bool
+vertSame y m = areSameAndSet (0, y) (1, y) (2, y) m
+
+horizontalsSame :: Integer -> AsMap -> Bool
+horizontalsSame x m = areSameAndSet (x, 0) (x, 1) (x, 2) m
+
+toPlayer :: String -> Maybe Player
+toPlayer "X" = Just O
+toPlayer "O" = Just T
+toPlayer _ = Nothing
+
+didWin :: Move -> (Maybe Player)
+didWin move =
+  let m = toMap move
+  in if horizontalsSame 0 m then
+       toPlayer $ getCell (0, 0) m
+    else if horizontalsSame 1 m then
+       toPlayer $ getCell (1, 0) m
+    else if horizontalsSame 2 m then
+       toPlayer $ getCell (2, 0) m
+    else if vertSame 0 m then
+       toPlayer $ getCell (0, 0) m
+    else if vertSame 1 m then
+       toPlayer $ getCell (0, 1) m
+    else if vertSame 2 m then
+       toPlayer $ getCell (0, 2) m
+    else if diagsSameLeft m then
+       toPlayer $ getCell (0, 0) m
+    else if diagsSameRight m then
+       toPlayer $ getCell (0, 2) m
+    else Nothing
 
 makeMove :: Cell -> Move -> Move
 makeMove c (OMove oneMove) =
@@ -26,7 +76,7 @@ bottomCen m = makeMove (2,1) m
 topLeft m = makeMove (0,0) m
 midLeft m = makeMove (1,0) m
 bottomLeft m = makeMove (2,0) m
-
+ 
 emptyMap :: AsMap
 emptyMap = M.fromList [((0,0),Empty), ((0,1),Empty), ((0,2),Empty), ((1,0),Empty), ((1,1),Empty), ((1,2),Empty), ((2,0),Empty), ((2,1),Empty), ((2,2),Empty)]
 
@@ -55,6 +105,7 @@ toString m =
       mid = getCell (1,0) m ++ getCell (1,1) m ++ getCell (1,2) m
       bot = getCell (2,0) m ++ getCell (2,1) m ++ getCell (2,2) m
   in [top, mid, bot]
+
 
 main = do
   let f = TMove $ TNone
