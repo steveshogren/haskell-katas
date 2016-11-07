@@ -61,11 +61,16 @@ didWin move =
        toPlayer $ getCell (0, 2) m
     else Nothing
 
-makeMove :: Cell -> Move -> Move
+makeGame (Just p) move = Finished move p
+makeGame Nothing move = Unfinished move
+
+makeMove :: Cell -> Move -> Game
 makeMove c (OMove oneMove) =
-  TMove $ TwoMove (c, oneMove)
+  let m = TMove $ TwoMove (c, oneMove)
+  in makeGame (didWin m) m
 makeMove c (TMove twoMove) =
-  OMove $ OneMove (c, twoMove)
+  let m = OMove $ OneMove (c, twoMove)
+  in makeGame (didWin m) m
 
 topRight m = makeMove (0,2) m
 midRight m = makeMove (1,2) m
@@ -76,7 +81,7 @@ bottomCen m = makeMove (2,1) m
 topLeft m = makeMove (0,0) m
 midLeft m = makeMove (1,0) m
 bottomLeft m = makeMove (2,0) m
- 
+
 emptyMap :: AsMap
 emptyMap = M.fromList [((0,0),Empty), ((0,1),Empty), ((0,2),Empty), ((1,0),Empty), ((1,1),Empty), ((1,2),Empty), ((2,0),Empty), ((2,1),Empty), ((2,2),Empty)]
 
@@ -92,11 +97,13 @@ toMap :: Move -> AsMap
 toMap (OMove o) = oneToMap M.empty o
 toMap (TMove o) = twoToMap M.empty o
 
+cellAsString :: Maybe State -> [Char]
 cellAsString (Just One) = "X"
 cellAsString (Just Two) = "O"
 cellAsString (Just Empty) = " "
 cellAsString Nothing = " "
 
+getCell :: Ord k => k -> M.Map k State -> [Char]
 getCell c m = cellAsString $ M.lookup c m
 
 toString :: AsMap -> [String]
@@ -106,7 +113,19 @@ toString m =
       bot = getCell (2,0) m ++ getCell (2,1) m ++ getCell (2,2) m
   in [top, mid, bot]
 
+(>>==) :: Game -> (Move -> Game) -> Game
+(Unfinished g) >>== m = m g
+a >>== _ = a
 
+printGame :: Game -> IO [()]
+printGame (Finished m p) = do
+  return
+     print "Player Won" >>
+       (mapM (print)) $ toString $ toMap $ m
+printGame (Unfinished m) = (mapM (print)) $ toString $ toMap $ m
+
+main :: IO [()]
 main = do
-  let f = TMove $ TNone
-  (mapM (print)) $ toString $ toMap $ topRight $ topLeft $ topCen $ f
+  let f = Unfinished $ TMove $ TNone
+  printGame $ (f >>== topLeft >>== topRight >>== midCen >>== topCen >>== bottomRight >>== bottomLeft)
+  
