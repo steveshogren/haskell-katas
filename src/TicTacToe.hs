@@ -8,8 +8,6 @@ type AsMap = M.Map Cell State
 data State = Exx | Oh | Empty
   deriving (Eq, Show, Read)
 type Cell = (Integer,Integer)
-data Player = X | O
-  deriving (Eq, Show, Read)
 data OhMove = OhMove (Cell, ExMove) | TNone
   deriving (Eq, Show, Read)
 data ExMove = ExMove (Cell, OhMove) | ONone
@@ -17,8 +15,7 @@ data ExMove = ExMove (Cell, OhMove) | ONone
 data Move = ExxMove ExMove
             | OhhMove OhMove
   deriving (Eq, Show, Read)
-
-data Game = Finished Move Player
+data Game = Finished Move
             | Unfinished Move
   deriving (Eq, Show, Read)
 
@@ -42,35 +39,30 @@ vertSame y m = areSameAndSet (0, y) (1, y) (2, y) m
 horizontalsSame :: Integer -> AsMap -> Bool
 horizontalsSame x m = areSameAndSet (x, 0) (x, 1) (x, 2) m
 
-toPlayer :: String -> Maybe Player
-toPlayer "X" = Just X
-toPlayer "O" = Just O
-toPlayer _ = Nothing
-
-didWin :: Move -> (Maybe Player)
+didWin :: Move -> Bool
 didWin move =
   let m = toMap move
   in if horizontalsSame 0 m then
-       toPlayer $ getCell (0, 0) m
+       True
     else if horizontalsSame 1 m then
-       toPlayer $ getCell (1, 0) m
+       True
     else if horizontalsSame 2 m then
-       toPlayer $ getCell (2, 0) m
+       True
     else if vertSame 0 m then
-       toPlayer $ getCell (0, 0) m
+       True
     else if vertSame 1 m then
-       toPlayer $ getCell (0, 1) m
+       True
     else if vertSame 2 m then
-       toPlayer $ getCell (0, 2) m
+       True
     else if diagsSameLeft m then
-       toPlayer $ getCell (0, 0) m
+       True
     else if diagsSameRight m then
-       toPlayer $ getCell (0, 2) m
-    else Nothing
+       True
+    else False
 
-makeGame :: Maybe Player -> Move -> Game
-makeGame (Just p) move = Finished move p
-makeGame Nothing move = Unfinished move
+makeGame :: Bool -> Move -> Game
+makeGame True move = Finished move
+makeGame False move = Unfinished move
 
 makeMove :: Cell -> Move -> Game
 makeMove c (ExxMove oneMove) =
@@ -126,7 +118,7 @@ toString m =
 a >>== _ = a
 
 printGame :: Game -> IO [()]
-printGame (Finished m p) = do
+printGame (Finished m) = do
   putStrLn ("Player: " ++ (show m) ++ " Won!" )
   (mapM (print)) $ toString $ toMap $ m
 printGame (Unfinished m) = (mapM (print)) $ toString $ toMap $ m
