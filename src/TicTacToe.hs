@@ -8,17 +8,16 @@ type AsMap = M.Map Cell State
 data State = Exx | Oh | Empty
   deriving (Eq, Show, Read)
 type Cell = (Integer,Integer)
-data OhMove = OhMove (Cell, ExMove) | TNone
+data O = O (Cell, X) | TNone
   deriving (Eq, Show, Read)
-data ExMove = ExMove (Cell, OhMove) | ONone
+data X = X (Cell, O) | ONone
   deriving (Eq, Show, Read)
-data Move = ExxMove ExMove
-            | OhhMove OhMove
+data Move = XMove X
+            | OMove O
   deriving (Eq, Show, Read)
 data Game = Finished Move
             | Unfinished Move
   deriving (Eq, Show, Read)
-
 
 areSameAndSet :: Cell -> Cell -> Cell -> AsMap -> Bool
 areSameAndSet c1 c2 c3 m =
@@ -42,21 +41,14 @@ horizontalsSame x m = areSameAndSet (x, 0) (x, 1) (x, 2) m
 didWin :: Move -> Bool
 didWin move =
   let m = toMap move
-  in if horizontalsSame 0 m then
-       True
-    else if horizontalsSame 1 m then
-       True
-    else if horizontalsSame 2 m then
-       True
-    else if vertSame 0 m then
-       True
-    else if vertSame 1 m then
-       True
-    else if vertSame 2 m then
-       True
-    else if diagsSameLeft m then
-       True
-    else if diagsSameRight m then
+  in if horizontalsSame 0 m ||
+        horizontalsSame 1 m ||
+        horizontalsSame 2 m ||
+        vertSame 0 m ||
+        vertSame 1 m ||
+        vertSame 2 m ||
+        diagsSameLeft m ||
+        diagsSameRight m then
        True
     else False
 
@@ -65,11 +57,11 @@ makeGame True move = Finished move
 makeGame False move = Unfinished move
 
 makeMove :: Cell -> Move -> Game
-makeMove c (ExxMove oneMove) =
-  let m = OhhMove $ OhMove (c, oneMove)
+makeMove c (XMove oneMove) =
+  let m = OMove $ O (c, oneMove)
   in makeGame (didWin m) m
-makeMove c (OhhMove twoMove) =
-  let m = ExxMove $ ExMove (c, twoMove)
+makeMove c (OMove twoMove) =
+  let m = XMove $ X (c, twoMove)
   in makeGame (didWin m) m
 
 topRight m = makeMove (0,2) m
@@ -85,17 +77,17 @@ bottomLeft m = makeMove (2,0) m
 emptyMap :: AsMap
 emptyMap = M.fromList [((0,0),Empty), ((0,1),Empty), ((0,2),Empty), ((1,0),Empty), ((1,1),Empty), ((1,2),Empty), ((2,0),Empty), ((2,1),Empty), ((2,2),Empty)]
 
-oneToMap :: AsMap -> ExMove -> AsMap
-oneToMap  m (ExMove (cell, o)) = twoToMap (M.insert cell Exx m) o
+oneToMap :: AsMap -> X -> AsMap
+oneToMap  m (X (cell, o)) = twoToMap (M.insert cell Exx m) o
 oneToMap m ONone = m
 
-twoToMap :: AsMap -> OhMove -> AsMap
-twoToMap m (OhMove (cell, o)) = oneToMap (M.insert cell Oh m) o
+twoToMap :: AsMap -> O -> AsMap
+twoToMap m (O (cell, o)) = oneToMap (M.insert cell Oh m) o
 twoToMap m TNone = m
 
 toMap :: Move -> AsMap
-toMap (ExxMove o) = oneToMap M.empty o
-toMap (OhhMove o) = twoToMap M.empty o
+toMap (XMove o) = oneToMap M.empty o
+toMap (OMove o) = twoToMap M.empty o
 
 cellAsString :: Maybe State -> [Char]
 cellAsString (Just Exx) = "X"
@@ -117,13 +109,21 @@ toString m =
 (Unfinished g) >>== m = m g
 a >>== _ = a
 
+playerName :: Move -> [Char]
+playerName (XMove _) = "X"
+playerName (OMove _) = "O"
+
+playerWonMessage :: Move -> [Char]
+playerWonMessage m =
+  "Player: " ++ (playerName m) ++ " Won!"
+
 printGame :: Game -> IO [()]
 printGame (Finished m) = do
-  putStrLn ("Player: " ++ (show m) ++ " Won!" )
+  putStrLn (playerWonMessage m)
   (mapM (print)) $ toString $ toMap $ m
 printGame (Unfinished m) = (mapM (print)) $ toString $ toMap $ m
 
 main :: IO [()]
 main = do
-  let f = Unfinished $ OhhMove $ TNone
-  printGame $ (f >>== topLeft >>== midCen >>== topCen >>== bottomRight >>== topRight)
+  let f = Unfinished $ OMove $ TNone
+  printGame $ (f >>== midCen >>== topLeft >>== midCen >>== topCen >>== bottomRight >>== topRight)
