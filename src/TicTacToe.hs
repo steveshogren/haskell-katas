@@ -8,15 +8,16 @@ type AsMap = M.Map Cell State
 data State = Exx | Oh | Empty
   deriving (Eq, Show, Read)
 type Cell = (Integer,Integer)
-data O = O (Cell, X) | TNone
+data O = O (Cell, X) | ONone
   deriving (Eq, Show, Read)
-data X = X (Cell, O) | ONone
+data X = X (Cell, O) | XNone
   deriving (Eq, Show, Read)
 data Move = XMove X
             | OMove O
   deriving (Eq, Show, Read)
 data Game = Finished Move
             | Unfinished Move
+            | NoMoves
   deriving (Eq, Show, Read)
 
 areSameAndSet :: Cell -> Cell -> Cell -> AsMap -> Bool
@@ -77,17 +78,17 @@ bottomLeft m = makeMove (2,0) m
 emptyMap :: AsMap
 emptyMap = M.fromList [((0,0),Empty), ((0,1),Empty), ((0,2),Empty), ((1,0),Empty), ((1,1),Empty), ((1,2),Empty), ((2,0),Empty), ((2,1),Empty), ((2,2),Empty)]
 
-oneToMap :: AsMap -> X -> AsMap
-oneToMap  m (X (cell, o)) = twoToMap (M.insert cell Exx m) o
-oneToMap m ONone = m
+xToMap :: AsMap -> X -> AsMap
+xToMap  m (X (cell, o)) = oToMap (M.insert cell Exx m) o
+xToMap m XNone = m
 
-twoToMap :: AsMap -> O -> AsMap
-twoToMap m (O (cell, o)) = oneToMap (M.insert cell Oh m) o
-twoToMap m TNone = m
+oToMap :: AsMap -> O -> AsMap
+oToMap m (O (cell, o)) = xToMap (M.insert cell Oh m) o
+oToMap m ONone = m
 
 toMap :: Move -> AsMap
-toMap (XMove o) = oneToMap M.empty o
-toMap (OMove o) = twoToMap M.empty o
+toMap (XMove o) = xToMap M.empty o
+toMap (OMove o) = oToMap M.empty o
 
 cellAsString :: Maybe State -> [Char]
 cellAsString (Just Exx) = "X"
@@ -105,8 +106,15 @@ toString m =
       bot = getCell (2,0) m ++ getCell (2,1) m ++ getCell (2,2) m
   in [top, mid, bot]
 
+undoMove :: Move -> Move
+undoMove (XMove XNone) = OMove ONone
+undoMove (OMove ONone) = XMove XNone
+undoMove (XMove (X (_, o))) = OMove o
+undoMove (OMove (O (_, x))) = XMove x
+
 (>>==) :: Game -> (Move -> Game) -> Game
 (Unfinished g) >>== m = m g
+NoMoves >>== m = m $ OMove ONone
 a >>== _ = a
 
 playerName :: Move -> [Char]
@@ -122,8 +130,18 @@ printGame (Finished m) = do
   putStrLn (playerWonMessage m)
   (mapM (print)) $ toString $ toMap $ m
 printGame (Unfinished m) = (mapM (print)) $ toString $ toMap $ m
+printGame NoMoves = (mapM (print)) $ toString $  emptyMap
 
 main :: IO [()]
 main = do
-  let f = Unfinished $ OMove $ TNone
-  printGame $ (f >>== midCen >>== topLeft >>== midCen >>== topCen >>== bottomRight >>== topRight)
+  let f = NoMoves
+      partWay = (f >>== midCen >>== topLeft >>== bottomLeft)
+  case partWay of
+    Unfinished g ->
+      let undone = Unfinished $ undoMove g
+      in printGame $ (undone >>== bottomCen >>== topCen >>== bottomRight >>== topRight)
+    Finished g ->
+      let undone = Unfinished $ undoMove g
+      in printGame $ (undone >>== bottomCen >>== topCen >>== bottomRight >>== topRight)
+    NoMoves ->
+      mapM putStrLn ["invalid move"]
