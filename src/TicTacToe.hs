@@ -2,6 +2,8 @@ module TicTacToe where
 
 import qualified Data.Map as M
 import Data.Maybe
+import Test.Tasty
+import Test.Tasty.HUnit
 
 type AsMap = M.Map Cell State
 
@@ -42,16 +44,14 @@ horizontalsSame x m = areSameAndSet (x, 0) (x, 1) (x, 2) m
 didWin :: Move -> Bool
 didWin move =
   let m = toMap move
-  in if horizontalsSame 0 m ||
-        horizontalsSame 1 m ||
-        horizontalsSame 2 m ||
-        vertSame 0 m ||
-        vertSame 1 m ||
-        vertSame 2 m ||
-        diagsSameLeft m ||
-        diagsSameRight m then
-       True
-    else False
+  in horizontalsSame 0 m ||
+     horizontalsSame 1 m ||
+     horizontalsSame 2 m ||
+     vertSame 0 m ||
+     vertSame 1 m ||
+     vertSame 2 m ||
+     diagsSameLeft m ||
+     diagsSameRight m
 
 makeGame :: Bool -> Move -> Game
 makeGame True move = Finished move
@@ -145,3 +145,15 @@ main = do
       in printGame $ (undone >>== bottomCen >>== topCen >>== bottomRight >>== topRight)
     NoMoves ->
       mapM putStrLn ["invalid move"]
+
+
+  
+test1 = (assertEqual "checking stuff" (1,2) (2, 3))
+
+tests :: TestTree
+tests = testGroup "TicTacToeTests"
+  [
+    testCase "winning game" test1
+  ]
+
+runTests = defaultMain tests
