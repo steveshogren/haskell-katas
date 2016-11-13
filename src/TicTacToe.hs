@@ -147,8 +147,18 @@ main = do
       mapM putStrLn ["invalid move"]
 
 
-  
-test1 = (assertEqual "checking stuff" (1,2) (2, 3))
+test1 =
+  let f = NoMoves
+      partWay = (f >>== midCen >>== topRight)
+  in case partWay of
+      Unfinished g ->
+        let undone = undoMove g
+            expectedUndo = XMove (X ((1,1),ONone))
+            expectedBefore = OMove (O ((0,2),X ((1,1),ONone)))
+        in (assertEqual "Undoing the move" expectedUndo undone >>
+            assertEqual "Before undo" expectedBefore g)
+      _ -> assertFailure "Got wrong Game type"
+
 
 tests :: TestTree
 tests = testGroup "TicTacToeTests"
