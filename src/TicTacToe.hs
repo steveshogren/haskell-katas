@@ -121,16 +121,16 @@ playerName :: Move -> [Char]
 playerName (XMove _) = "X"
 playerName (OMove _) = "O"
 
-playerWonMessage :: Move -> [Char]
+playerWonMessage :: Move -> String
 playerWonMessage m =
   "Player: " ++ (playerName m) ++ " Won!"
 
-printGame :: Game -> IO [()]
-printGame (Finished m) = do
-  putStrLn (playerWonMessage m)
-  (mapM (print)) $ toString $ toMap $ m
-printGame (Unfinished m) = (mapM (print)) $ toString $ toMap $ m
-printGame NoMoves = (mapM (print)) $ toString $  emptyMap
+stringifyGame :: Game -> [String]
+stringifyGame (Finished m) = do
+  [(playerWonMessage m)] ++
+   (toString $ toMap $ m)
+stringifyGame (Unfinished m) =  toString $ toMap $ m
+stringifyGame NoMoves =  toString $  emptyMap
 
 main :: IO [()]
 main = do
@@ -139,15 +139,14 @@ main = do
   case partWay of
     Unfinished g ->
       let undone = Unfinished $ undoMove g
-      in printGame $ (undone >>== bottomCen >>== topCen >>== bottomRight >>== topRight)
+      in mapM print $ stringifyGame $ (undone >>== bottomCen >>== topCen >>== bottomRight >>== topRight)
     Finished g ->
       let undone = Unfinished $ undoMove g
-      in printGame $ (undone >>== bottomCen >>== topCen >>== bottomRight >>== topRight)
+      in mapM print $ stringifyGame $ (undone >>== bottomCen >>== topCen >>== bottomRight >>== topRight)
     NoMoves ->
       mapM putStrLn ["invalid move"]
 
-
-test1 =
+testUndo =
   let f = NoMoves
       partWay = (f >>== midCen >>== topRight)
   in case partWay of
@@ -159,11 +158,20 @@ test1 =
             assertEqual "Before undo" expectedBefore g)
       _ -> assertFailure "Got wrong Game type"
 
+testWinning =
+  let f = NoMoves
+      game = stringifyGame (f >>== midCen >>== topLeft >>== bottomCen >>== topCen >>== bottomRight >>== topRight)
+      expectedString = ["Player: O Won!",
+                        "OOO",
+                        " X ",
+                        " XX"]
+  in (assertEqual "Before undo" expectedString game)
 
 tests :: TestTree
 tests = testGroup "TicTacToeTests"
   [
-    testCase "winning game" test1
+    testCase "undo game" testUndo,
+    testCase "winning game" testWinning
   ]
 
 runTests = defaultMain tests
