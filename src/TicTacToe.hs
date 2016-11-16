@@ -156,7 +156,7 @@ testUndo =
             expectedBefore = OMove (O ((0,2),X ((1,1),ONone)))
         in (assertEqual "Undoing the move" expectedUndo undone >>
             assertEqual "Before undo" expectedBefore g)
-      _ -> assertFailure "Got wrong Game type"
+      _ -> assertFailure "Game should be Unfinished"
 
 testWinning =
   let f = NoMoves
@@ -165,12 +165,21 @@ testWinning =
                         "OOO",
                         " X ",
                         " XX"]
-  in (assertEqual "Before undo" expectedString game)
+  in (assertEqual "Player 0 Winning" expectedString game)
+
+testUnfinished =
+  let f = NoMoves
+      game = stringifyGame (f >>== midCen >>== topLeft >>== bottomCen >>== topCen >>== bottomRight)
+      expectedString = ["OO ",
+                        " X ",
+                        " XX"]
+  in (assertEqual "Game unfinished" expectedString game)
 
 tests :: TestTree
 tests = testGroup "TicTacToeTests"
   [
     testCase "undo game" testUndo,
+    testCase "game unfinished" testUnfinished,
     testCase "winning game" testWinning
   ]
 
