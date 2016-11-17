@@ -146,6 +146,7 @@ main = do
     NoMoves ->
       mapM putStrLn ["invalid move"]
 
+testUndo :: IO ()
 testUndo =
   let f = NoMoves
       partWay = (f >>== midCen >>== topRight)
@@ -158,6 +159,7 @@ testUndo =
             assertEqual "Before undo" expectedBefore g)
       _ -> assertFailure "Game should be Unfinished"
 
+testWinning :: Assertion
 testWinning =
   let f = NoMoves
       game = stringifyGame (f >>== midCen >>== topLeft >>== bottomCen >>== topCen >>== bottomRight >>== topRight)
@@ -167,6 +169,7 @@ testWinning =
                         " XX"]
   in (assertEqual "Player 0 Winning" expectedString game)
 
+testUnfinished :: Assertion
 testUnfinished =
   let f = NoMoves
       game = stringifyGame (f >>== midCen >>== topLeft >>== bottomCen >>== topCen >>== bottomRight)
@@ -183,4 +186,5 @@ tests = testGroup "TicTacToeTests"
     testCase "winning game" testWinning
   ]
 
+runTests :: IO ()
 runTests = defaultMain tests
