@@ -12,14 +12,53 @@ category:            Web
 build-type:          Simple
 cabal-version:       >=1.10
 
+library
+  hs-source-dirs:      src
+  exposed-modules:     TicTacToe
+  build-depends:      
+                     MonadRandom >= 0.4
+                     , base >= 4.7 && < 5
+                     , containers >= 0.5.6.2
+                     , directory >= 1.2.2.0
+                     , lens >= 4.12.3
+                     , random >= 1.1
+                     , random-shuffle
+                     , split >= 0.2.2
+                     , tasty
+                     , tasty-hunit
+                     , time >= 1.5.0.1
+  default-language:    Haskell2010
+
 executable haskell-kata
   hs-source-dirs:      src
   main-is:             Main.hs
   default-language:    Haskell2010
-  build-depends:       HUnit >= 1.2.5.2
+  build-depends:
+                     
+                      MonadRandom >= 0.4
+                     , base >= 4.7 && < 5
+                     , containers >= 0.5.6.2
+                     , directory >= 1.2.2.0
+                     , lens >= 4.12.3
+                     , random >= 1.1
+                     , random-shuffle
+                     , split >= 0.2.2
+                     , tasty
+                     , tasty-hunit
+                     , time >= 1.5.0.1
+
+test-suite haskell-kata-test
+  type:                exitcode-stdio-1.0
+  hs-source-dirs:      test
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
+  default-language:    Haskell2010
+  main-is:             TicTacToeTest.hs
+  build-depends:
+                      HUnit >= 1.2.5.2
                      , MonadRandom >= 0.4
                      , base >= 4.7 && < 5
                      , containers >= 0.5.6.2
+                     , haskell-kata
                      , directory >= 1.2.2.0
                      , lens >= 4.12.3
                      , random >= 1.1

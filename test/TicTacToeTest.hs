@@ -1,5 +1,3 @@
-module TicTacToeTest where
-
 import qualified Data.Map as M
 import TicTacToe
 import Data.Maybe
@@ -47,5 +45,5 @@ tests = testGroup "TicTacToeTests"
     testCase "winning game" testWinning
   ]
 
-runTests :: IO ()
-runTests = defaultMain tests
+main :: IO ()
+main = defaultMain tests
