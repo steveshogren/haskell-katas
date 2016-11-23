@@ -1,7 +1,6 @@
 module TicTacToe where
 
 import qualified Data.Map as M
-import Data.Maybe
 
 type AsMap = M.Map Cell State
 

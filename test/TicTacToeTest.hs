@@ -1,9 +1,21 @@
-import qualified Data.Map as M
+module TicTacToeTest where
+
 import TicTacToe
-import Data.Maybe
 import Test.Tasty
 import Test.Tasty.HUnit
 
+testUndoOnlyOneMove :: IO ()
+testUndoOnlyOneMove =
+  let f = NoMoves
+      partWay = (f >>== midCen)
+  in case partWay of
+      Unfinished g ->
+        let undone = undoMove g
+            expectedBefore = XMove (X ((1,1),ONone))
+            expectedAfter = OMove ONone
+        in (assertEqual "Undoing the move" expectedAfter undone >>
+            assertEqual "Before undo" expectedBefore g)
+      _ -> assertFailure "Game should be Unfinished"
 
 testUndo :: IO ()
 testUndo =
@@ -40,6 +52,7 @@ testUnfinished =
 tests :: TestTree
 tests = testGroup "TicTacToeTests"
   [
+    testCase "undo game one move" testUndoOnlyOneMove,
     testCase "undo game" testUndo,
     testCase "game unfinished" testUnfinished,
     testCase "winning game" testWinning
