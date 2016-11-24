@@ -12,7 +12,7 @@ testUndoOnlyOneMove =
       Unfinished g ->
         let undone = undoMove g
             expectedBefore = XMove (X ((1,1),ONone))
-            expectedAfter = OMove ONone
+            expectedAfter = NoMoves
         in (assertEqual "Undoing the move" expectedAfter undone >>
             assertEqual "Before undo" expectedBefore g)
       _ -> assertFailure "Game should be Unfinished"
@@ -24,7 +24,7 @@ testUndo =
   in case partWay of
       Unfinished g ->
         let undone = undoMove g
-            expectedUndo = XMove (X ((1,1),ONone))
+            expectedUndo = Unfinished $ XMove (X ((1,1),ONone))
             expectedBefore = OMove (O ((0,2),X ((1,1),ONone)))
         in (assertEqual "Undoing the move" expectedUndo undone >>
             assertEqual "Before undo" expectedBefore g)

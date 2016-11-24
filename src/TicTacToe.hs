@@ -51,6 +51,8 @@ didWin move =
      diagsSameRight m
 
 makeGame :: Bool -> Move -> Game
+makeGame _ (XMove XNone) = NoMoves
+makeGame _ (OMove ONone) = NoMoves
 makeGame True move = Finished move
 makeGame False move = Unfinished move
 
@@ -103,11 +105,11 @@ toString m =
       bot = getCell (2,0) m ++ getCell (2,1) m ++ getCell (2,2) m
   in [top, mid, bot]
 
-undoMove :: Move -> Move
-undoMove (XMove XNone) = OMove ONone
-undoMove (OMove ONone) = XMove XNone
-undoMove (XMove (X (_, o))) = OMove o
-undoMove (OMove (O (_, x))) = XMove x
+undoMove :: Move -> Game
+undoMove (XMove XNone) = NoMoves
+undoMove (OMove ONone) = NoMoves
+undoMove (XMove (X (_, o))) = makeGame False $ OMove o
+undoMove (OMove (O (_, x))) = makeGame False $ XMove x
 
 (>>==) :: Game -> (Move -> Game) -> Game
 (Unfinished g) >>== m = m g
