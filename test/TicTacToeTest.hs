@@ -3,6 +3,7 @@ module TicTacToeTest where
 import TicTacToe
 import Test.Tasty
 import Test.Tasty.HUnit
+import qualified HearthstoneTest as HT
 
 testUndoOnlyOneMove :: IO ()
 testUndoOnlyOneMove =
@@ -75,8 +76,8 @@ testUnfinished =
                         " XX"]
   in (assertEqual "Game unfinished" expectedString game)
 
-tests :: TestTree
-tests = testGroup "TicTacToeTests"
+tests2 :: TestTree
+tests2 = testGroup "TicTacToeTests"
   [
     testCase "undo game one move" testUndoOnlyOneMove,
     testCase "undo game" testUndo,
@@ -85,5 +86,3 @@ tests = testGroup "TicTacToeTests"
     testCase "Win conditions" testWinConditions
   ]
 
-main :: IO ()
-main = defaultMain tests

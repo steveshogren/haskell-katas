@@ -19,7 +19,8 @@ fullDeck = [0,0,1,1,2,2,2,3,3,3,3,4,4,4,5,5,6,6,7,8]
 makeDeck :: (MonadRandom m) => m Deck
 makeDeck = Rand.shuffleM fullDeck
 
-playHand p1 p2 h1 = p1 p2
+playHand :: t -> t1 -> t2 -> (t, t1, t2)
+playHand p1 p2 h1 = (p1, p2, h1)
 
 main :: IO ()
 main = do
