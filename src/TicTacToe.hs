@@ -41,14 +41,14 @@ horizontalsSame x m = areSameAndSet (x, 0) (x, 1) (x, 2) m
 didWin :: Move -> Bool
 didWin move =
   let m = toMap move
-  in horizontalsSame 0 m ||
-     horizontalsSame 1 m ||
-     horizontalsSame 2 m ||
-     vertSame 0 m ||
-     vertSame 1 m ||
-     vertSame 2 m ||
-     diagsSameLeft m ||
-     diagsSameRight m
+  in horizontalsSame 0 m
+    || horizontalsSame 1 m
+    || horizontalsSame 2 m
+    || vertSame 0 m
+    || vertSame 1 m
+    || vertSame 2 m
+    || diagsSameLeft m
+    || diagsSameRight m
 
 makeGame :: Bool -> Move -> Game
 makeGame _ (XMove XNone) = NoMoves

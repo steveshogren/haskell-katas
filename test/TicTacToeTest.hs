@@ -3,7 +3,6 @@ module TicTacToeTest where
 import TicTacToe
 import Test.Tasty
 import Test.Tasty.HUnit
-import qualified HearthstoneTest as HT
 
 testUndoOnlyOneMove :: IO ()
 testUndoOnlyOneMove =
@@ -43,6 +42,7 @@ testWinning =
 
 testDidWin :: Game -> Bool
 testDidWin (Unfinished a) = didWin a
+testDidWin (Finished a) = didWin a
 testDidWin _ = False
 
 testWinConditions :: Assertion
@@ -64,8 +64,8 @@ testWinConditions =
      >> (assertEqual "left win" True leftWin)
      >> (assertEqual "cen win" True cenWin)
      >> (assertEqual "no win" False noWin)
-     >> (assertEqual "diag right" False diagRight)
-     >> (assertEqual "diag left" False diagLeft)
+     >> (assertEqual "diag right" True diagRight)
+     >> (assertEqual "diag left" True diagLeft)
 
 testUnfinished :: Assertion
 testUnfinished =
@@ -86,3 +86,4 @@ tests2 = testGroup "TicTacToeTests"
     testCase "Win conditions" testWinConditions
   ]
 
+runner = defaultMain tests2
