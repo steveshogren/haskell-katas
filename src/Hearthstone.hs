@@ -1,9 +1,7 @@
 module Hearthstone where
 
-import qualified Data.Map as M
 import qualified System.Random.Shuffle as Rand
 import Control.Monad.Random
-import Control.Monad
 
 type Card = Int
 type Deck = [Card]
@@ -24,11 +22,12 @@ playHand (Player health1 mana1 cards1) (Player health2 p2m p2c) =
   let (totalDamage, handLeft, manaLeft) =
         foldr
         (\card (dam, hand, mana) ->
-           if (card >= manaLeft) then
-             (dam+card, hand,mana-card)
+           if (card <= mana) && (not(card == 0)) then
+             (dam+card, hand, mana-card)
            else
              (dam, [card]++hand,mana))
-        (0, [], mana1) cards1
+        (0, [], mana1)
+        cards1
   in (Player health1 manaLeft handLeft, Player (health2 - totalDamage) p2m p2c)
 
 main :: IO ()
