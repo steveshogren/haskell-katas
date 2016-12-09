@@ -22,7 +22,7 @@ playHand (Player health1 mana1 cards1) (Player health2 p2m p2c) =
   let (totalDamage, handLeft, manaLeft) =
         foldr
         (\card (dam, hand, mana) ->
-           if (card <= mana) && (not(card == 0)) then
+           if (card <= mana) then
              (dam+card, hand, mana-card)
            else
              (dam, [card]++hand,mana))
