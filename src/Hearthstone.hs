@@ -1,6 +1,7 @@
 module Hearthstone where
 
 import qualified System.Random.Shuffle as Rand
+import Data.List(sort)
 import Control.Monad.Random
 
 type Card = Int
@@ -27,7 +28,7 @@ playHand (Player health1 mana1 cards1) (Player health2 p2m p2c) =
            else
              (dam, [card]++hand,mana))
         (0, [], mana1)
-        cards1
+        (sort cards1)
   in (Player health1 manaLeft handLeft, Player (health2 - totalDamage) p2m p2c)
 
 main :: IO ()
