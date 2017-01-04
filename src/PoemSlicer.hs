@@ -50,7 +50,7 @@ displayLinNum :: Int -> ([String], t, Int) -> [String]
 displayLinNum lineSize (s, _, goto) =
   let totalSize = (totalLineSize lineSize)
       lines = padLines lineSize s
-  in lines ++ ["   -> "  ++ (show (goto*totalSize)), " "]
+  in lines ++ ["   -> "  ++ (show (goto*totalSize)), ""]
 
 displaySearch :: [String] -> Int -> ([String], Int, Int) -> [String]
 displaySearch words lineSize (s, currentLine, nextLine) =
