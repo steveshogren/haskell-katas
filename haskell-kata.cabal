@@ -37,6 +37,7 @@ executable haskell-kata-exe
   build-depends:
                      
                       MonadRandom >= 0.4
+                     , linearEqSolver
                      , haskell-kata
                      , base >= 4.7 && < 5
                      , containers >= 0.5.6.2
@@ -58,6 +59,7 @@ test-suite haskell-kata-test
   main-is:             MainTest.hs
   build-depends:
                       HUnit >= 1.2.5.2
+                     , linearEqSolver
                      , MonadRandom >= 0.4
                      , base >= 4.7 && < 5
                      , containers >= 0.5.6.2
