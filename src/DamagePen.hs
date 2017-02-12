@@ -11,27 +11,27 @@ attackSpeed :: Fractional a => a -> a -> a
 attackSpeed bat asm =(1/bat)*asm
 
 yesDoubleCrit :: Double
-yesDoubleCrit = 2
+yesDoubleCrit = 2.5
+
 noDoubleCrit :: Double
-noDoubleCrit = 1
+noDoubleCrit = 1.5
 
 dmgReduction :: Fractional a => a -> a -> a -> a
 dmgReduction ar pn lvl =
   let armor = (ar * 7) + 30
       pen = pn * 4
-  in (armor-pen) / (100 + (armor - pen) + (10*(lvl-1)))
+  in (armor-pen) / (100+(armor-pen)+(10*(lvl-1)))
 
 murdockDps :: Double
-murdockDps = dps 21 14 18 7 yesDoubleCrit 86 1.35 1 15
+murdockDps = dps 22 18.2 19.7 7 yesDoubleCrit 86 1.35 1 15
 
-dps :: (Fractional a, Fractional a1) => a -> a -> a -> a1 -> a -> a -> a -> a -> a1 -> a
-dps power_points attack_speed_points crit_points pen crit_damage base_damage  base_attack_speed scaling lvl =
+dps :: (Fractional a) => a -> a -> a -> a -> a -> a -> a -> a -> a -> a
+dps power_points attack_speed_points crit_points pen crit_damage base_damage base_attack_speed scaling lvl =
   let reduction = dmgReduction 31.5 pen lvl
-      dps = (base_damage + 6 * power_points * scaling)
-              * ((1 + (0.055 * attack_speed_points)) / base_attack_speed)
-              * (1 + (0.04 * crit_points * (crit_damage - 1)))
-  in dps
-  -- * (1 - reduction)
+      dps = (base_damage+6*power_points*scaling)
+              * ((1+(0.055*attack_speed_points))/base_attack_speed)
+              * (1+(0.04*crit_points)*(crit_damage-1))
+  in dps * (1 - reduction)
 
 calcDamagef :: Num a => a -> a -> a -> a
 calcDamagef bp arc ar =
