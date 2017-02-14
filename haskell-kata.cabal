@@ -16,17 +16,18 @@ library
   hs-source-dirs:      src
   exposed-modules:     TicTacToe
   build-depends:      
-                     MonadRandom >= 0.4
-                     , base >= 4.7 && < 5
-                     , containers >= 0.5.6.2
-                     , directory >= 1.2.2.0
-                     , lens >= 4.12.3
-                     , random >= 1.1
-                     , random-shuffle
-                     , split >= 0.2.2
-                     , tasty
-                     , tasty-hunit
-                     , time >= 1.5.0.1
+                        MonadRandom >= 0.4
+                      , base >= 4.7 && < 5
+                      , containers >= 0.5.6.2
+                      , directory >= 1.2.2.0
+                      , lens >= 4.12.3
+                      , mtl >= 2.2.1
+                      , random >= 1.1
+                      , random-shuffle
+                      , split >= 0.2.2
+                      , tasty
+                      , tasty-hunit
+                      , time >= 1.5.0.1
   default-language:    Haskell2010
 
 executable haskell-kata-exe
@@ -35,20 +36,23 @@ executable haskell-kata-exe
   default-language:    Haskell2010
   other-modules:       TicTacToe
   build-depends:
-                     
-                      MonadRandom >= 0.4
-                     , linearEqSolver
-                     , haskell-kata
-                     , base >= 4.7 && < 5
-                     , containers >= 0.5.6.2
-                     , directory >= 1.2.2.0
-                     , lens >= 4.12.3
-                     , random >= 1.1
-                     , random-shuffle
-                     , split >= 0.2.2
-                     , tasty
-                     , tasty-hunit
-                     , time >= 1.5.0.1
+
+                  MonadRandom >= 0.4
+                , base >= 4.7 && < 5
+                , containers >= 0.5.6.2
+                , directory >= 1.2.2.0
+                , glpk-hs
+                , haskell-kata
+                , hmatrix
+                , hmatrix-glpk
+                , lens >= 4.12.3
+                , mtl >= 2.2.1
+                , random >= 1.1
+                , random-shuffle
+                , split >= 0.2.2
+                , tasty
+                , tasty-hunit
+                , time >= 1.5.0.1
 
 test-suite haskell-kata-test
   type:                exitcode-stdio-1.0
@@ -58,17 +62,20 @@ test-suite haskell-kata-test
   default-language:    Haskell2010
   main-is:             MainTest.hs
   build-depends:
-                      HUnit >= 1.2.5.2
-                     , linearEqSolver
-                     , MonadRandom >= 0.4
-                     , base >= 4.7 && < 5
-                     , containers >= 0.5.6.2
-                     , haskell-kata
-                     , directory >= 1.2.2.0
-                     , lens >= 4.12.3
-                     , random >= 1.1
-                     , random-shuffle
-                     , split >= 0.2.2
-                     , tasty
-                     , tasty-hunit
-                     , time >= 1.5.0.1
+                   HUnit >= 1.2.5.2
+                , MonadRandom >= 0.4
+                , base >= 4.7 && < 5
+                , containers >= 0.5.6.2
+                , directory >= 1.2.2.0
+                , glpk-hs
+                , haskell-kata
+                , hmatrix
+                , hmatrix-glpk
+                , lens >= 4.12.3
+                , mtl >= 2.2.1
+                , random >= 1.1
+                , random-shuffle
+                , split >= 0.2.2
+                , tasty
+                , tasty-hunit
+                , time >= 1.5.0.1
