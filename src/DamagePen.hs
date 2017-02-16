@@ -1,5 +1,7 @@
 module DamagePen where
 
+import Data.List
+
 attackSpeed :: Fractional a => a -> a -> a
 attackSpeed bat asm =(1/bat)*asm
 
@@ -18,9 +20,6 @@ dmgReduction ar pn lvl =
       pen = pn * 4.0
   in (armor-pen) / (100+(armor-pen)+(10*(lvl-1)))
 
-murdockDps :: Double
-murdockDps = dps 20 14 18 8 yesBonusCrit 86 1.35 1 15
-
 -- pp + att_spd + crit_points = 60
 
 dps :: (Fractional a) => a -> a -> a -> a -> a -> a -> a -> a -> a -> a
@@ -31,4 +30,19 @@ dps power_points attack_speed_points crit_points pen crit_damage base_damage bas
               * (1+(0.04*crit_points)*(crit_damage-1))
   in raw_dps * (1 - reduction)
 
+murdockDps :: Double -> Double -> Double -> Double -> Double
+murdockDps pwr speed crit pen = dps pwr speed crit pen yesBonusCrit 86 1.35 1 15
 
+calcIfUnder dmg speed crit pen max =
+  if (dmg + speed + crit + pen) < max
+  then (murdockDps dmg speed crit pen, show (dmg,speed,crit,pen ))
+  else (0, "")
+
+maxDps =
+  let points = 60
+      totals = [ (calcIfUnder dmg speed crit pen points) |
+                 dmg <- [0..30],
+                 speed <- [0..30],
+                 crit <- [0..30],
+                 pen<- [0..30]]
+  in maximum totals
