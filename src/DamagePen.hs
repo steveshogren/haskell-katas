@@ -36,20 +36,26 @@ dps power_points attack_speed_points crit_points pen crit_damage base_damage bas
       crit_bonus = (1+((0.04*crit_points)*(crit_damage-1)))
   in base_dmg * hits_second * crit_bonus * reduction
 
-murdockDps :: Double -> Double -> Double -> Double -> Double
--- murdockDps pwr speed crit pen = dps pwr speed crit pen yesBonusCrit 86 1.35 1 15
-murdockDps pwr speed crit pen = dps pwr speed crit pen yesBonusCrit 86 1.35 1 15
+murdockDps :: Double -> Double -> Double -> Double -> Double -> Double
+murdockDps pwr speed crit pen bonus = dps pwr speed crit pen bonus 86 1.16 1 15
 
-calcIfUnder dmg speed crit pen max =
-  if (dmg + speed + crit + pen) == max
-  then (murdockDps dmg speed crit pen, show (dmg,speed,crit,pen))
+calcIfUnder :: Double -> Double -> Double -> Double -> Double -> Double -> (Double, String)
+calcIfUnder dmg speed crit pen critbonus max =
+  if (dmg + speed + crit + pen + (critbonus * 6)) == max
+  then
+    let bonus = if critbonus == 1 then yesBonusCrit else noBonusCrit
+    in (murdockDps dmg speed crit pen bonus, show (dmg,speed,crit,pen,critbonus))
   else (0, "")
 
 maxDps =
-  let points = 60
-      totals = [ (calcIfUnder dmg speed crit pen points) |
+  let totalPoints = 66
+      lifeSteal = 11
+      ward = 1
+      points = totalPoints - lifeSteal - ward
+      totals = [ (calcIfUnder dmg speed crit pen critbonus points) |
                  dmg <- [0..30],
                  speed <- [0..30],
                  crit <- [0..30],
-                 pen <- [0..30]]
+                 pen <- [0..30],
+                 critbonus <- [0..1]]
   in take 2 $ reverse $ sort totals

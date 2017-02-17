@@ -7,6 +7,7 @@ import Control.Monad.LPMonad
 import Data.LinearProgram.GLPK
 import Control.Monad.State
 import Data.LinearProgram
+import Data.List
 
 onDemandHourlyCost = 0.64
 reservationFixedCosts = [("light", 552.0), ("medium", 1280.0), ("heavy", 1560.0)]
@@ -77,3 +78,64 @@ lp2 = execLPM $ do
   setVarKind "x2" ContVar
 
 main2 = print =<< glpSolveVars mipDefaults lp2
+
+data Card = Card
+    { cost :: Integer
+    , power :: Integer
+    , speed :: Integer
+    , crit :: Integer
+    , pen :: Integer
+    , lifesteal :: Integer
+    , crit_bonus :: Integer
+    , name :: String
+    , letter :: Char
+    }
+
+toCard (cost, power, speed, crit, pen, lifesteal, crit_bonus, name) letter =
+  Card { cost = cost
+    , power = power
+    , speed = speed
+    , crit = crit
+    , pen = pen
+    , lifesteal = lifesteal
+    , crit_bonus = crit_bonus
+    , name = name
+    , letter = letter
+    }
+
+mainCards =
+  zipWith toCard
+    [(2, 2, 1, 0, 0, 0, 0, "madstone gem")
+    ,(3, 2, 0, 2, 0, 0, 0, "impact hammer")
+    ,(3, 3, 1, 0, 0, 0, 0, "windcarver blade")
+    ,(3, 0, 0, 1, 0, 3, 0, "brand ironeater")
+    ,(2, 0, 2, 1, 0, 0, 0, "redeye nitro")
+    ,(3, 3, 0, 0, 1, 0, 0, "rustbreaker")
+    ,(3, 1, 0, 3, 0, 0, 0, "spear rifthunter")
+    ,(3, 1, 3, 0, 0, 0, 0, "whirling wand")
+    ,(6, 1, 0, 0, 0, 0, 1, "blade of agora")
+    ,(6, 0, 0, 0, 0, 1, 1, "hunger maul")
+    ,(3, 3, 0, 1, 0, 0, 0, "micro-nuke")
+    ,(3, 2, 0, 0, 0, 0, 0, "sages ward")
+    ,(6, 0, 1, 0, 0, 0, 1, "blast harness")
+    ]
+    ['a'..]
+
+upgrades = [1, 2, 3]
+
+-- desired numbers (15,12,13,8.0,11,1)
+
+obj fn total =
+  let elem = map (\next -> (show $ fn next) ++ [letter next])  mainCards
+  in (intercalate " + ") elem ++  " = " ++ (show total)
+
+o1 = obj cost 65
+o2 = obj power 15
+o3 = obj speed 12
+o4 = obj crit 13
+o5 = obj pen 8
+o6 = obj lifesteal 11
+o7 = obj crit_bonus 1
+
+allO = mapM putStrLn [o1, o2,o3,o4,o5,o6,o7]
+
