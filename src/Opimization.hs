@@ -8,6 +8,7 @@ import Data.LinearProgram.GLPK
 import Control.Monad.State
 import Data.LinearProgram
 import Data.List
+import qualified Data.Set as Set
 
 onDemandHourlyCost = 0.64
 reservationFixedCosts = [("light", 552.0), ("medium", 1280.0), ("heavy", 1560.0)]
@@ -79,6 +80,28 @@ lp2 = execLPM $ do
 
 main2 = print =<< glpSolveVars mipDefaults lp2
 
+upgradeTypes 1 = (1, "a")
+upgradeTypes 2 = (2, "a")
+upgradeTypes 3 = (3, "a")
+upgradeTypes 4 = (1, "b")
+upgradeTypes 5 = (2, "b")
+upgradeTypes 6 = (3, "b")
+
+flattenPermutations :: [(Integer, String)] -> (Integer, Integer)
+flattenPermutations = foldl (\(ac, bc) (cost, t) -> if (t == "a") then (ac+1, bc) else (ac,bc+1)) (0, 0)
+
+twoCardUpgrades :: [(Integer, Integer)]
+twoCardUpgrades =
+  let types = Set.toList $ Set.fromList $
+                map ((map upgradeTypes) . sort) [ [x,y,z]
+                          | x <- [1..6],
+                            y <- [1..6],
+                            z <- [1..6]]
+  in map flattenPermutations types
+
+oneCardUpgrades :: [Integer]
+oneCardUpgrades = [1..9]
+
 data Card = Card
     { cost :: Integer
     , power :: Integer
@@ -101,7 +124,7 @@ toCard (cost, power, speed, crit, pen, lifesteal, crit_bonus, name) letter =
     , crit_bonus = crit_bonus
     , name = name
     , letter = letter
-    }
+    } 
 
 mainCards =
   zipWith toCard
@@ -113,21 +136,46 @@ mainCards =
     ,(3, 3, 0, 0, 1, 0, 0, "rustbreaker")
     ,(3, 1, 0, 3, 0, 0, 0, "spear rifthunter")
     ,(3, 1, 3, 0, 0, 0, 0, "whirling wand")
+    ,(3, 3, 0, 1, 0, 0, 0, "micro-nuke")
     ,(6, 1, 0, 0, 0, 0, 1, "blade of agora")
     ,(6, 0, 0, 0, 0, 1, 1, "hunger maul")
-    ,(3, 3, 0, 1, 0, 0, 0, "micro-nuke")
     ,(3, 2, 0, 0, 0, 0, 0, "sages ward")
     ,(6, 0, 1, 0, 0, 0, 1, "blast harness")
     ]
     ['a'..]
-
-upgrades = [1, 2, 3]
 
 -- desired numbers (15,12,13,8.0,11,1)
 
 obj fn total =
   let elem = map (\next -> (show $ fn next) ++ [letter next])  mainCards
   in (intercalate " + ") elem ++  " = " ++ (show total)
+
+showOne fn total =
+  let elem = map (\next -> (show $ fn next) ++ [letter next]) $ twoTypeCardPermutations $ head mainCards
+  in (intercalate " + ") elem ++  " = " ++ (show total)
+
+cardHasTwoTypes card =
+  let points = (power card) + (speed card) + (crit card) + (pen card) + (lifesteal card)
+  in points > 1
+
+cardFields True True False False False card a b = card {cost = (cost card) + a + b, power = (power card) + a, speed = (speed card) + b}
+cardFields True False True False False card a b = card {cost = (cost card) + a + b, power = (power card) + a, crit = (crit card) + b}
+cardFields True False False True False card a b = card {cost = (cost card) + a + b, power = (power card) + a, pen = (pen card) + b}
+cardFields True False False False True card a b = card {cost = (cost card) + a + b, power = (power card) + a, lifesteal = (lifesteal card) + b}
+cardFields False True True False False card a b = card {cost = (cost card) + a + b, speed = (speed card) + a, crit = (crit card) + b}
+cardFields False True False True False card a b = card {cost = (cost card) + a + b, speed = (speed card) + a, pen = (pen card) + b}
+cardFields False True False False True card a b = card {cost = (cost card) + a + b, speed = (speed card) + a, lifesteal = (lifesteal card) + b}
+cardFields False False True True False card a b = card {cost = (cost card) + a + b, crit = (crit card) + a, pen = (pen card) + b}
+cardFields False False True False True card a b = card {cost = (cost card) + a + b, crit = (crit card) + a, lifesteal = (lifesteal card) + b}
+cardFields False False False True True card a b = card {cost = (cost card) + a + b, pen = (pen card) + a, lifesteal = (lifesteal card) + b}
+
+twoTypeCardPermutations card =
+  let hasPower = power card > 0
+      hasSpeed = speed card > 0
+      hasCrit = crit card > 0
+      hasPen = pen card > 0
+      hasLS = lifesteal card > 0
+  in map (\(ac, bc) -> cardFields hasPower hasSpeed hasCrit hasPen hasLS card ac bc) twoCardUpgrades
 
 o1 = obj cost 65
 o2 = obj power 15
@@ -137,5 +185,19 @@ o5 = obj pen 8
 o6 = obj lifesteal 11
 o7 = obj crit_bonus 1
 
-allO = mapM putStrLn [o1, o2,o3,o4,o5,o6,o7]
+allO = mapM putStrLn [o1 ++ " -- cxp"
+                     , o2 ++ " -- power"
+                     , o3 ++ " -- speed"
+                     , o4 ++ " -- crit"
+                     , o5 ++ " -- pen"
+                     , o6 ++ " -- lifesteal"
+                     , o7 ++ " -- crit_bonus"]
 
+
+-- 2a + 3b + 3c + 3d + 2e + 3f + 3g + 3h + 6i + 6j + 3k + 3l + 6m = 65 -- cxp
+-- 2a + 2b + 3c + 0d + 0e + 3f + 1g + 1h + 1i + 0j + 3k + 2l + 0m = 15 -- power
+-- 1a + 0b + 1c + 0d + 2e + 0f + 0g + 3h + 0i + 0j + 0k + 0l + 1m = 12 -- speed
+-- 0a + 2b + 0c + 1d + 1e + 0f + 3g + 0h + 0i + 0j + 1k + 0l + 0m = 13 -- crit
+-- 0a + 0b + 0c + 0d + 0e + 1f + 0g + 0h + 0i + 0j + 0k + 0l + 0m = 8 -- pen
+-- 0a + 0b + 0c + 3d + 0e + 0f + 0g + 0h + 0i + 1j + 0k + 0l + 0m = 11 -- lifesteal
+-- 0a + 0b + 0c + 0d + 0e + 0f + 0g + 0h + 1i + 1j + 0k + 0l + 1m = 1 -- crit_bonus
