@@ -88,16 +88,18 @@ upgradeTypes 5 = (2, "b")
 upgradeTypes 6 = (3, "b")
 
 flattenPermutations :: [(Integer, String)] -> (Integer, Integer)
-flattenPermutations = foldl (\(ac, bc) (cost, t) -> if (t == "a") then (ac+1, bc) else (ac,bc+1)) (0, 0)
+flattenPermutations = foldl (\(ac, bc) (cost, t) -> if (t == "a") then (ac+cost, bc) else (ac,bc+cost)) (0, 0)
 
-twoCardUpgrades :: [(Integer, Integer)]
+addName (ac, bc) = (ac, bc, "-" ++ (show ac) ++ "-" ++ (show bc) )
+
+twoCardUpgrades :: [(Integer, Integer, String)]
 twoCardUpgrades =
   let types = Set.toList $ Set.fromList $
                 map ((map upgradeTypes) . sort) [ [x,y,z]
                           | x <- [1..6],
                             y <- [1..6],
                             z <- [1..6]]
-  in map flattenPermutations types
+  in map (addName . flattenPermutations) types
 
 oneCardUpgrades :: [Integer]
 oneCardUpgrades = [1..9]
@@ -111,7 +113,7 @@ data Card = Card
     , lifesteal :: Integer
     , crit_bonus :: Integer
     , name :: String
-    , letter :: Char
+    , letter :: String
     }
 
 toCard (cost, power, speed, crit, pen, lifesteal, crit_bonus, name) letter =
@@ -142,40 +144,47 @@ mainCards =
     ,(3, 2, 0, 0, 0, 0, 0, "sages ward")
     ,(6, 0, 1, 0, 0, 0, 1, "blast harness")
     ]
-    ['a'..]
+    (map (\a -> [a]) ['a'..])
 
 -- desired numbers (15,12,13,8.0,11,1)
 
 obj fn total =
-  let elem = map (\next -> (show $ fn next) ++ [letter next])  mainCards
+  let elem = map (\next -> (show $ fn next) ++ letter next)  mainCards
   in (intercalate " + ") elem ++  " = " ++ (show total)
 
-showOne fn total =
-  let elem = map (\next -> (show $ fn next) ++ [letter next]) $ twoTypeCardPermutations $ head mainCards
-  in (intercalate " + ") elem ++  " = " ++ (show total)
+showOne fn total permutations =
+  let elem = map (\next -> (show $ fn next) ++ letter next) permutations
+  in (intercalate " + ") elem
+
+showAll fn total =
+  foldl (\ret card -> ret ++ " + " ++ (showOne fn total (twoTypeCardPermutations card))) "" mainCards
 
 cardHasTwoTypes card =
   let points = (power card) + (speed card) + (crit card) + (pen card) + (lifesteal card)
   in points > 1
 
-cardFields True True False False False card a b = card {cost = (cost card) + a + b, power = (power card) + a, speed = (speed card) + b}
-cardFields True False True False False card a b = card {cost = (cost card) + a + b, power = (power card) + a, crit = (crit card) + b}
-cardFields True False False True False card a b = card {cost = (cost card) + a + b, power = (power card) + a, pen = (pen card) + b}
-cardFields True False False False True card a b = card {cost = (cost card) + a + b, power = (power card) + a, lifesteal = (lifesteal card) + b}
-cardFields False True True False False card a b = card {cost = (cost card) + a + b, speed = (speed card) + a, crit = (crit card) + b}
-cardFields False True False True False card a b = card {cost = (cost card) + a + b, speed = (speed card) + a, pen = (pen card) + b}
-cardFields False True False False True card a b = card {cost = (cost card) + a + b, speed = (speed card) + a, lifesteal = (lifesteal card) + b}
-cardFields False False True True False card a b = card {cost = (cost card) + a + b, crit = (crit card) + a, pen = (pen card) + b}
-cardFields False False True False True card a b = card {cost = (cost card) + a + b, crit = (crit card) + a, lifesteal = (lifesteal card) + b}
-cardFields False False False True True card a b = card {cost = (cost card) + a + b, pen = (pen card) + a, lifesteal = (lifesteal card) + b}
+cardFields True True False False False card a b n = card {letter = (letter card) ++ n, cost = (cost card) + a + b, power = (power card) + a, speed = (speed card) + b}
+cardFields True False True False False card a b n = card {letter = (letter card) ++ n, cost = (cost card) + a + b, power = (power card) + a, crit = (crit card) + b}
+cardFields True False False True False card a b n = card {letter = (letter card) ++ n, cost = (cost card) + a + b, power = (power card) + a, pen = (pen card) + b}
+cardFields True False False False True card a b n = card {letter = (letter card) ++ n, cost = (cost card) + a + b, power = (power card) + a, lifesteal = (lifesteal card) + b}
+cardFields False True True False False card a b n = card {letter = (letter card) ++ n, cost = (cost card) + a + b, speed = (speed card) + a, crit = (crit card) + b}
+cardFields False True False True False card a b n = card {letter = (letter card) ++ n, cost = (cost card) + a + b, speed = (speed card) + a, pen = (pen card) + b}
+cardFields False True False False True card a b n = card {letter = (letter card) ++ n, cost = (cost card) + a + b, speed = (speed card) + a, lifesteal = (lifesteal card) + b}
+cardFields False False True True False card a b n = card {letter = (letter card) ++ n, cost = (cost card) + a + b, crit = (crit card) + a, pen = (pen card) + b}
+cardFields False False True False True card a b n = card {letter = (letter card) ++ n, cost = (cost card) + a + b, crit = (crit card) + a, lifesteal = (lifesteal card) + b}
+cardFields False False False True True card a b n = card {letter = (letter card) ++ n, cost = (cost card) + a + b, pen = (pen card) + a, lifesteal = (lifesteal card) + b}
+cardFields False False False False True card a b n = card {letter = (letter card) ++ n, cost = (cost card) + a + b, lifesteal = (lifesteal card) + a + b}
+cardFields True False False False False card a b n = card {letter = (letter card) ++ n, cost = (cost card) + a + b, power = (power card) + a + b}
+cardFields False True False False False card a b n = card {letter = (letter card) ++ n, cost = (cost card) + a + b, speed = (speed card) + a + b}
 
+twoTypeCardPermutations :: Card -> [Card]
 twoTypeCardPermutations card =
   let hasPower = power card > 0
       hasSpeed = speed card > 0
       hasCrit = crit card > 0
       hasPen = pen card > 0
       hasLS = lifesteal card > 0
-  in map (\(ac, bc) -> cardFields hasPower hasSpeed hasCrit hasPen hasLS card ac bc) twoCardUpgrades
+  in map (\(ac, bc, n) -> cardFields hasPower hasSpeed hasCrit hasPen hasLS card ac bc n) twoCardUpgrades
 
 o1 = obj cost 65
 o2 = obj power 15
