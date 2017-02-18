@@ -126,15 +126,15 @@ toCard (cost, power, speed, crit, pen, lifesteal, crit_bonus, name) letter =
     , crit_bonus = crit_bonus
     , name = name
     , letter = letter
-    } 
+    }
 
 mainCards =
   zipWith toCard
     [(2, 2, 1, 0, 0, 0, 0, "madstone gem")
+    ,(2, 0, 2, 1, 0, 0, 0, "redeye nitro")
     ,(3, 2, 0, 2, 0, 0, 0, "impact hammer")
     ,(3, 3, 1, 0, 0, 0, 0, "windcarver blade")
     ,(3, 0, 0, 1, 0, 3, 0, "brand ironeater")
-    ,(2, 0, 2, 1, 0, 0, 0, "redeye nitro")
     ,(3, 3, 0, 0, 1, 0, 0, "rustbreaker")
     ,(3, 1, 0, 3, 0, 0, 0, "spear rifthunter")
     ,(3, 1, 3, 0, 0, 0, 0, "whirling wand")
@@ -146,36 +146,63 @@ mainCards =
     ]
     (map (\a -> [a]) ['a'..])
 
--- desired numbers (15,12,13,8.0,11,1)
 
 obj fn total =
   let elem = map (\next -> (show $ fn next) ++ letter next)  mainCards
   in (intercalate " + ") elem ++  " = " ++ (show total)
 
-showOne fn total permutations =
-  let elem = map (\next -> (show $ fn next) ++ letter next) permutations
-  in (intercalate " + ") elem
+showOne fn permutations =
+  map (\next -> (fn next, (name next))) permutations
 
-showAll fn total =
-  foldl (\ret card -> ret ++ " + " ++ (showOne fn total (twoTypeCardPermutations card))) "" mainCards
+showAll fn =
+  foldl (\ret card -> ret ++ (showOne fn (twoTypeCardPermutations card))) [] mainCards
+
+objFunCards :: LinFunc String Integer
+objFunCards = linCombination (showAll cost)
+
+-- desired numbers (15,12,13,8.0,11,1)
+
+lpCards :: LP String Integer
+lpCards = execLPM $ do
+  -- setDirection Min
+  -- setObjective (linCombination $ showAll cost)
+  leqTo (linCombination (showAll cost)) 66
+  geqTo (linCombination (showAll power)) 15
+  geqTo (linCombination (showAll speed)) 12
+  geqTo (linCombination (showAll crit)) 13
+  geqTo (linCombination (showAll pen)) 8
+  geqTo (linCombination (showAll lifesteal)) 11
+  geqTo (linCombination (showAll crit_bonus)) 1
+  leqTo (linCombination (map (\(_,n) -> (1, n)) $ showAll power)) 6
+  mapM (\(_,n) -> setVarKind n IntVar) $ showAll power
+  mapM (\(_,n) -> varBds n 0 1) $ showAll power
+
+mainSolveCards = do
+  x <- glpSolveVars mipDefaults lpCards
+  --putStrLn (show (allVariables loadPattern))
+  case x of (Success, Just (obj, vars)) -> do
+                             putStrLn "Success!"
+                             putStrLn ("Cost: " ++ (show obj))
+                             putStrLn ("Variables: " ++ (show (filter (\(name, count) -> count > 0) $ Map.toList vars)))
+            (failure, result) -> putStrLn ("Failure: " ++ (show failure))
 
 cardHasTwoTypes card =
   let points = (power card) + (speed card) + (crit card) + (pen card) + (lifesteal card)
   in points > 1
 
-cardFields True True False False False card a b n = card {letter = (letter card) ++ n, cost = (cost card) + a + b, power = (power card) + a, speed = (speed card) + b}
-cardFields True False True False False card a b n = card {letter = (letter card) ++ n, cost = (cost card) + a + b, power = (power card) + a, crit = (crit card) + b}
-cardFields True False False True False card a b n = card {letter = (letter card) ++ n, cost = (cost card) + a + b, power = (power card) + a, pen = (pen card) + b}
-cardFields True False False False True card a b n = card {letter = (letter card) ++ n, cost = (cost card) + a + b, power = (power card) + a, lifesteal = (lifesteal card) + b}
-cardFields False True True False False card a b n = card {letter = (letter card) ++ n, cost = (cost card) + a + b, speed = (speed card) + a, crit = (crit card) + b}
-cardFields False True False True False card a b n = card {letter = (letter card) ++ n, cost = (cost card) + a + b, speed = (speed card) + a, pen = (pen card) + b}
-cardFields False True False False True card a b n = card {letter = (letter card) ++ n, cost = (cost card) + a + b, speed = (speed card) + a, lifesteal = (lifesteal card) + b}
-cardFields False False True True False card a b n = card {letter = (letter card) ++ n, cost = (cost card) + a + b, crit = (crit card) + a, pen = (pen card) + b}
-cardFields False False True False True card a b n = card {letter = (letter card) ++ n, cost = (cost card) + a + b, crit = (crit card) + a, lifesteal = (lifesteal card) + b}
-cardFields False False False True True card a b n = card {letter = (letter card) ++ n, cost = (cost card) + a + b, pen = (pen card) + a, lifesteal = (lifesteal card) + b}
-cardFields False False False False True card a b n = card {letter = (letter card) ++ n, cost = (cost card) + a + b, lifesteal = (lifesteal card) + a + b}
-cardFields True False False False False card a b n = card {letter = (letter card) ++ n, cost = (cost card) + a + b, power = (power card) + a + b}
-cardFields False True False False False card a b n = card {letter = (letter card) ++ n, cost = (cost card) + a + b, speed = (speed card) + a + b}
+cardFields True True False False False  card a b = card {power = (power card) + a, speed = (speed card) + b}
+cardFields True False True False False  card a b = card {power = (power card) + a, crit = (crit card) + b}
+cardFields True False False True False  card a b = card {power = (power card) + a, pen = (pen card) + b}
+cardFields True False False False True  card a b = card {power = (power card) + a, lifesteal = (lifesteal card) + b}
+cardFields False True True False False  card a b = card {speed = (speed card) + a, crit = (crit card) + b}
+cardFields False True False True False  card a b = card {speed = (speed card) + a, pen = (pen card) + b}
+cardFields False True False False True  card a b = card {speed = (speed card) + a, lifesteal = (lifesteal card) + b}
+cardFields False False True True False  card a b = card {crit = (crit card) + a, pen = (pen card) + b}
+cardFields False False True False True  card a b = card {crit = (crit card) + a, lifesteal = (lifesteal card) + b}
+cardFields False False False True True  card a b = card {pen = (pen card) + a, lifesteal = (lifesteal card) + b}
+cardFields False False False False True card a b = card {lifesteal = (lifesteal card) + a + b}
+cardFields True False False False False card a b = card {power = (power card) + a + b}
+cardFields False True False False False card a b = card {speed = (speed card) + a + b}
 
 twoTypeCardPermutations :: Card -> [Card]
 twoTypeCardPermutations card =
@@ -184,7 +211,12 @@ twoTypeCardPermutations card =
       hasCrit = crit card > 0
       hasPen = pen card > 0
       hasLS = lifesteal card > 0
-  in map (\(ac, bc, n) -> cardFields hasPower hasSpeed hasCrit hasPen hasLS card ac bc n) twoCardUpgrades
+  in
+    concatMap (\c -> map (\(ac, bc, n) ->
+                            let nc = cardFields hasPower hasSpeed hasCrit hasPen hasLS card ac bc
+                                newCost = (cost nc) + ac + bc
+                            in nc { name = (name nc) ++ (n++ "-s" ++ (show c) ++ "-" ++ (show newCost)),
+                                    cost = newCost}) twoCardUpgrades) [1..5]
 
 o1 = obj cost 65
 o2 = obj power 15
