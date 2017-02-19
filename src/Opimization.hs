@@ -5,36 +5,31 @@ import Control.Lens
 import Prelude hiding ((*), (/), (+), (-))
 import qualified Data.Map as Map
 import Data.LinearProgram as DLP
-import Control.Monad.LPMonad
-import Data.LinearProgram.GLPK
-import Control.Monad.State
-import Data.LinearProgram
 import Data.List
 import qualified Data.Set as Set
 
+upgradeTypes :: (Eq a, Num t, Num a) => a -> (t, [Char])
 upgradeTypes 1 = (1, "a")
 upgradeTypes 2 = (2, "a")
 upgradeTypes 3 = (3, "a")
 upgradeTypes 4 = (1, "b")
 upgradeTypes 5 = (2, "b")
-upgradeTypes 6 = (3, "b")
+upgradeTypes _ = (3, "b")
 
 flattenPermutations :: [(Integer, String)] -> (Integer, Integer)
 flattenPermutations = foldl (\(ac, bc) (cost, t) -> if (t == "a") then (ac+cost, bc) else (ac,bc+cost)) (0, 0)
 
-addName (ac, bc) = (ac, bc, "-" ++ (show ac) ++ "-" ++ (show bc) )
+-- addName :: (Show a, Show a1) => (a, a1) -> (a, a1, [Char])
+-- addName (ac, bc) = (ac, bc, "-" ++ (show ac) ++ "-" ++ (show bc) )
 
-twoCardUpgrades :: [(Integer, Integer, String)]
+twoCardUpgrades :: [(Integer, Integer)]
 twoCardUpgrades =
   let types = Set.toList $ Set.fromList $
                 map ((map upgradeTypes) . sort) [ [x,y,z]
                           | x <- [1..6],
                             y <- [1..6],
                             z <- [1..6]]
-  in map (addName . flattenPermutations) types
-
-oneCardUpgrades :: [Integer]
-oneCardUpgrades = [1..9]
+  in map (flattenPermutations) types
 
 data Card = Card
     { _cost :: Integer
@@ -51,6 +46,7 @@ data Card = Card
     }
 makeLenses ''Card
 
+toCard :: (Integer, Integer, Integer, Integer, Integer, Integer, Integer, String) -> String -> Card
 toCard (cost, power, speed, crit, pen, lifesteal, crit_bonus, name) letter =
   Card { _cost = cost
        , _power = power
@@ -65,6 +61,7 @@ toCard (cost, power, speed, crit, pen, lifesteal, crit_bonus, name) letter =
        , _secondType = ""
        }
 
+mainCards :: [Card]
 mainCards =
   zipWith toCard
     [(2, 2, 1, 0, 0, 0, 0, "madstone gem")
@@ -83,31 +80,34 @@ mainCards =
     ]
     (map (\a -> [a]) ['a'..])
 
-
-obj fn total =
-  let elem = map (\next -> (show $ fn next) ++ _letter next)  mainCards
-  in (intercalate " + ") elem ++  " = " ++ (show total)
-
+showOne :: (Card -> t) -> [Card] -> [(t, String)]
 showOne fn permutations =
   map (\next -> (fn next, (_name next))) permutations
 
+showAll :: (Card -> t) -> [(t, String)]
 showAll fn =
   foldl (\ret card -> ret ++ (showOne fn (twoTypeCardPermutations card))) [] mainCards
 
+updateFields lens add lens2 add2 n1 n2 =
+  (lens +~ add) . (lens2 +~ add2) . (firstType .~ n1) . (secondType .~ n2)
 
-cardFields True True False False False  card a b = card {_power = (_power card) + a, _speed = (_speed card) + b}
-cardFields True False True False False  card a b = card {_power = (_power card) + a, _crit = (_crit card) + b}
-cardFields True False False True False  card a b = card {_power = (_power card) + a, _pen = (_pen card) + b}
-cardFields True False False False True  card a b = card {_power = (_power card) + a, _lifesteal = (_lifesteal card) + b}
-cardFields False True True False False  card a b = card {_speed = (_speed card) + a, _crit = (_crit card) + b}
-cardFields False True False True False  card a b = card {_speed = (_speed card) + a, _pen = (_pen card) + b}
-cardFields False True False False True  card a b = card {_speed = (_speed card) + a, _lifesteal = (_lifesteal card) + b}
-cardFields False False True True False  card a b = card {_crit = (_crit card) + a, _pen = (_pen card) + b}
-cardFields False False True False True  card a b = card {_crit = (_crit card) + a, _lifesteal = (_lifesteal card) + b}
-cardFields False False False True True  card a b = card {_pen = (_pen card) + a, _lifesteal = (_lifesteal card) + b}
-cardFields False False False False True card a b = card {_lifesteal = (_lifesteal card) + a + b}
-cardFields True False False False False card a b = card {_power = (_power card) + a + b}
-cardFields False True False False False card a b = card {_speed = (_speed card) + a + b}
+cardFields :: Bool -> Bool -> Bool -> Bool -> Bool -> Card -> Integer -> Integer -> Card
+cardFields True True False False False card a b = updateFields power a speed b "pw" "sp" card
+cardFields True False True False False card a b = updateFields power a crit b "pw" "cr" card
+cardFields True False False True False card a b = updateFields power a pen b "pw" "pn" card
+cardFields True False False False True card a b = updateFields power a lifesteal b "pw" "ls" card
+cardFields False True True False False card a b = updateFields speed a crit b "sp" "cr" card
+cardFields False True False True False card a b = updateFields speed a pen b "sp" "pn" card
+cardFields False True False False True card a b = updateFields speed a lifesteal b "sp" "ls" card
+cardFields False False True True False card a b = updateFields crit a pen b "cr" "pn" card
+cardFields False False True False True card a b = updateFields crit a lifesteal b "cr" "ls" card
+cardFields False False False True True card a b = updateFields pen a lifesteal b "pn" "ls" card
+cardFields False False False False True card a b = updateFields lifesteal a lifesteal b "ls" "ls" card
+cardFields True False False False False card a b = updateFields power a power b "pw" "pw" card
+cardFields False True False False False card a b = updateFields speed a speed b "sp" "sp" card
+
+showCosts ac bc card =
+  (card^.firstType) ++ ":" ++ (show ac) ++ "," ++ (card^.secondType) ++ ":" ++ (show bc) ++ "-" 
 
 twoTypeCardPermutations :: Card -> [Card]
 twoTypeCardPermutations card =
@@ -117,27 +117,32 @@ twoTypeCardPermutations card =
       hasPen = _pen card > 0
       hasLS = _lifesteal card > 0
   in
-    concatMap (\c -> map (\(ac, bc, n) ->
+    concatMap (\c -> map (\(ac, bc) ->
                             let nc = cardFields hasPower hasSpeed hasCrit hasPen hasLS card ac bc
                                 newCost = (_cost nc) + ac + bc
-                            in nc { _name = (_name nc) ++ (n++ "-s" ++ (show c) ++ "-" ++ (show newCost)),
-                                    _cost = newCost}) twoCardUpgrades) [1..5]
+                            in nc { _name =  "s" ++ (show c) ++ "-" ++ (_name nc) ++ (showCosts ac bc nc) ++ "-" ++ (show newCost),
+                                    _cost = newCost}) twoCardUpgrades) [1..2]
 
-objFunCards :: LinFunc String Integer
-objFunCards = linCombination (showAll _cost)
+
 
 -- desired numbers (15,12,13,8.0,11,1)
+-- "blast harness(sp:0,sp:5)--11"
+-- "brand ironeater(cr:2,ls:6)--11"
+-- "rustbreaker(pw:6,pn:1)--10"
+-- "brand ironeater(cr:9,ls:0)--12"
+-- "rustbreaker(pw:3,pn:5)--11"
+
 
 lpCards :: LP String Integer
 lpCards = execLPM $ do
-  leqTo (linCombination (showAll _cost)) 66
+  leqTo (linCombination (showAll _cost)) 61
   geqTo (linCombination (showAll _power)) 15
   geqTo (linCombination (showAll _speed)) 12
   geqTo (linCombination (showAll _crit)) 13
   geqTo (linCombination (showAll _pen)) 8
   geqTo (linCombination (showAll _lifesteal)) 11
   geqTo (linCombination (showAll _crit_bonus)) 1
-  leqTo (linCombination (map (\(_,n) -> (1, n)) $ showAll _power)) 6
+  leqTo (linCombination (map (\(_,n) -> (1, n)) $ showAll _power)) 5
   mapM (\(_,n) -> setVarKind n IntVar) $ showAll _power
   mapM (\(_,n) -> varBds n 0 1) $ showAll _power
 
@@ -146,5 +151,6 @@ main = do
   case x of (Success, Just (obj, vars)) -> do
                              putStrLn "Success!"
                              putStrLn ("Cost: " ++ (show obj))
-                             putStrLn ("Variables: " ++ (show (filter (\(name, count) -> count > 0) $ Map.toList vars)))
+                             mapM (putStrLn . show) (filter (\(name, count) -> count > 0) $ Map.toList vars)
+                             putStrLn "Variables: "
             (failure, result) -> putStrLn ("Failure: " ++ (show failure))
