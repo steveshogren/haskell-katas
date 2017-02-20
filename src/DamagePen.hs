@@ -48,8 +48,8 @@ calcIfUnder dmg speed crit pen critbonus max =
   else (0, "")
 
 maxDps =
-  let totalPoints = 66
-      lifeSteal = 11
+  let totalPoints = 61
+      lifeSteal = 6
       ward = 1
       points = totalPoints - lifeSteal - ward
       totals = [ (calcIfUnder dmg speed crit pen critbonus points) |

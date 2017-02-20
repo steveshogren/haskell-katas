@@ -39,6 +39,8 @@ data Card = Card
     , _pen :: Integer
     , _lifesteal :: Integer
     , _crit_bonus :: Integer
+    , _ward :: Integer
+    , _blink :: Integer
     , _name :: String
     , _letter :: String
     , _firstType :: String
@@ -46,8 +48,8 @@ data Card = Card
     }
 makeLenses ''Card
 
-toCard :: (Integer, Integer, Integer, Integer, Integer, Integer, Integer, String) -> String -> Card
-toCard (cost, power, speed, crit, pen, lifesteal, crit_bonus, name) letter =
+toCard :: (Integer, Integer, Integer, Integer, Integer, Integer, Integer, Integer, Integer, String) -> String -> Card
+toCard (cost, power, speed, crit, pen, lifesteal, crit_bonus, ward, blink, name) letter =
   Card { _cost = cost
        , _power = power
        , _speed = speed
@@ -55,6 +57,8 @@ toCard (cost, power, speed, crit, pen, lifesteal, crit_bonus, name) letter =
        , _pen = pen
        , _lifesteal = lifesteal
        , _crit_bonus = crit_bonus
+       , _ward = ward
+       , _blink = blink
        , _name = name
        , _letter = letter
        , _firstType = ""
@@ -64,19 +68,20 @@ toCard (cost, power, speed, crit, pen, lifesteal, crit_bonus, name) letter =
 mainCards :: [Card]
 mainCards =
   zipWith toCard
-    [(2, 2, 1, 0, 0, 0, 0, "madstone gem")
-    ,(2, 0, 2, 1, 0, 0, 0, "redeye nitro")
-    ,(3, 2, 0, 2, 0, 0, 0, "impact hammer")
-    ,(3, 3, 1, 0, 0, 0, 0, "windcarver blade")
-    ,(3, 0, 0, 1, 0, 3, 0, "brand ironeater")
-    ,(3, 3, 0, 0, 1, 0, 0, "rustbreaker")
-    ,(3, 1, 0, 3, 0, 0, 0, "spear rifthunter")
-    ,(3, 1, 3, 0, 0, 0, 0, "whirling wand")
-    ,(3, 3, 0, 1, 0, 0, 0, "micro-nuke")
-    ,(6, 1, 0, 0, 0, 0, 1, "blade of agora")
-    ,(6, 0, 0, 0, 0, 1, 1, "hunger maul")
-    ,(3, 2, 0, 0, 0, 0, 0, "sages ward")
-    ,(6, 0, 1, 0, 0, 0, 1, "blast harness")
+    [(2, 2, 1, 0, 0, 0, 0, 0, 0, "madstone gem")
+    ,(2, 0, 2, 1, 0, 0, 0, 0, 0, "redeye nitro")
+    ,(3, 2, 0, 2, 0, 0, 0, 0, 0, "impact hammer")
+    ,(3, 3, 1, 0, 0, 0, 0, 0, 0, "windcarver blade")
+    ,(3, 0, 0, 1, 0, 3, 0, 0, 0, "brand ironeater")
+    ,(3, 3, 0, 0, 1, 0, 0, 0, 0, "rustbreaker")
+    ,(3, 1, 0, 3, 0, 0, 0, 0, 0, "spear rifthunter")
+    ,(3, 1, 3, 0, 0, 0, 0, 0, 0, "whirling wand")
+    ,(3, 3, 0, 1, 0, 0, 0, 0, 0, "micro-nuke")
+    ,(6, 1, 0, 0, 0, 0, 1, 0, 0, "blade of agora")
+    ,(6, 0, 0, 0, 0, 1, 1, 0, 0, "hunger maul")
+    ,(3, 2, 0, 0, 0, 0, 0, 1, 0, "sages ward")
+    ,(5, 0, 0, 0, 0, 0, 0, 0, 1, "blink charm")
+    ,(6, 0, 1, 0, 0, 0, 1, 0, 0, "blast harness")
     ]
     (map (\a -> [a]) ['a'..])
 
@@ -105,6 +110,7 @@ cardFields False False False True True card a b = updateFields pen a lifesteal b
 cardFields False False False False True card a b = updateFields lifesteal a lifesteal b "ls" "ls" card
 cardFields True False False False False card a b = updateFields power a power b "pw" "pw" card
 cardFields False True False False False card a b = updateFields speed a speed b "sp" "sp" card
+cardFields False False False False False card a b = card
 
 showCosts ac bc card =
   (card^.firstType) ++ ":" ++ (show ac) ++ "," ++ (card^.secondType) ++ ":" ++ (show bc) ++ "-" 
@@ -116,12 +122,12 @@ twoTypeCardPermutations card =
       hasCrit = _crit card > 0
       hasPen = _pen card > 0
       hasLS = _lifesteal card > 0
-  in
-    concatMap (\c -> map (\(ac, bc) ->
+      hasAny = hasPower && hasSpeed && hasCrit && hasPen && hasLS
+  in concatMap (\c -> map (\(ac, bc) ->
                             let nc = cardFields hasPower hasSpeed hasCrit hasPen hasLS card ac bc
-                                newCost = (_cost nc) + ac + bc
+                                newCost = if hasAny then (nc^.cost) + ac + bc else  (nc^.cost)
                             in nc { _name =  "s" ++ (show c) ++ "-" ++ (_name nc) ++ (showCosts ac bc nc) ++ "-" ++ (show newCost),
-                                    _cost = newCost}) twoCardUpgrades) [1..2]
+                                    _cost = newCost}) twoCardUpgrades) [1..1]
 
 
 
@@ -132,25 +138,43 @@ twoTypeCardPermutations card =
 -- "brand ironeater(cr:9,ls:0)--12"
 -- "rustbreaker(pw:3,pn:5)--11"
 
+data Build = Build {
+  _bpower :: Integer,
+  _bspeed :: Integer,
+  _bcrit :: Integer,
+  _bpen :: Integer,
+  _blifesteal :: Integer,
+  _bcrit_bonus :: Integer,
+  _bward :: Integer,
+  _bblink :: Integer
+  }
+makeLenses ''Build
 
-lpCards :: LP String Integer
-lpCards = execLPM $ do
-  leqTo (linCombination (showAll _cost)) 61
-  geqTo (linCombination (showAll _power)) 15
-  geqTo (linCombination (showAll _speed)) 12
-  geqTo (linCombination (showAll _crit)) 13
-  geqTo (linCombination (showAll _pen)) 8
-  geqTo (linCombination (showAll _lifesteal)) 11
-  geqTo (linCombination (showAll _crit_bonus)) 1
-  leqTo (linCombination (map (\(_,n) -> (1, n)) $ showAll _power)) 5
+totalCXP :: Integer
+totalCXP = 66
+totalCards :: Integer
+totalCards = 6
+
+lpCards :: Build -> LP String Integer
+lpCards build = execLPM $ do
+  leqTo (linCombination (showAll _cost)) totalCXP
+  geqTo (linCombination (showAll _power)) (build^.bpower)
+  geqTo (linCombination (showAll _speed)) (build^.bspeed)
+  geqTo (linCombination (showAll _crit)) (build^.bcrit)
+  geqTo (linCombination (showAll _pen)) (build^.bpen)
+  geqTo (linCombination (showAll _lifesteal)) (build^.blifesteal)
+  geqTo (linCombination (showAll _crit_bonus)) (build^.bcrit_bonus)
+  geqTo (linCombination (showAll _ward)) (build^.bward)
+  geqTo (linCombination (showAll _blink)) (build^.bblink)
+  leqTo (linCombination (map (\(_,n) -> (1, n)) $ showAll _power)) totalCards
   mapM (\(_,n) -> setVarKind n IntVar) $ showAll _power
   mapM (\(_,n) -> varBds n 0 1) $ showAll _power
 
 main = do
-  x <- glpSolveVars mipDefaults lpCards
+  let b = Build { _bpower = 15, _bspeed = 12, _bcrit = 13, _bpen = 8, _blifesteal = 6, _bcrit_bonus = 1, _bward = 1, _bblink = 1}
+  x <- glpSolveVars mipDefaults (lpCards b)
   case x of (Success, Just (obj, vars)) -> do
                              putStrLn "Success!"
-                             putStrLn ("Cost: " ++ (show obj))
-                             mapM (putStrLn . show) (filter (\(name, count) -> count > 0) $ Map.toList vars)
-                             putStrLn "Variables: "
+                             _ <- mapM (putStrLn . show) (filter (\(name, count) -> count > 0) $ Map.toList vars)
+                             putStrLn "Success!"
             (failure, result) -> putStrLn ("Failure: " ++ (show failure))
