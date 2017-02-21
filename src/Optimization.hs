@@ -1,5 +1,7 @@
 {-# LANGUAGE TemplateHaskell #-}
-module Optimization (main) where
+module Optimization (main
+                    , Build(..)
+                    ) where
 
 import Control.Lens
 import Prelude hiding ((*), (/), (+), (-))
@@ -93,6 +95,9 @@ showAll :: (Card -> t) -> [(t, String)]
 showAll fn =
   foldl (\ret card -> ret ++ (showOne fn (twoTypeCardPermutations card))) [] mainCards
 
+type CardSetter = ASetter Card Card Integer Integer
+
+updateFields :: CardSetter -> Integer -> CardSetter -> Integer -> String -> String -> Card -> Card
 updateFields lens add lens2 add2 n1 n2 =
   (lens +~ add) . (lens2 +~ add2) . (firstType .~ n1) . (secondType .~ n2)
 
@@ -112,8 +117,9 @@ cardFields True False False False False card a b = updateFields power a power b 
 cardFields False True False False False card a b = updateFields speed a speed b "sp" "sp" card
 cardFields False False False False False card a b = card
 
+showCosts :: (Show a, Show a1) => a -> a1 -> Card -> String
 showCosts ac bc card =
-  (card^.firstType) ++ ":" ++ (show ac) ++ "," ++ (card^.secondType) ++ ":" ++ (show bc) ++ "-" 
+  (card^.firstType) ++ ":" ++ (show ac) ++ "," ++ (card^.secondType) ++ ":" ++ (show bc) ++ "-"
 
 twoTypeCardPermutations :: Card -> [Card]
 twoTypeCardPermutations card =
