@@ -21,8 +21,8 @@ upgradeTypes _ = (3, "b")
 flattenPermutations :: [(Integer, String)] -> (Integer, Integer)
 flattenPermutations = foldl (\(ac, bc) (cost, t) -> if (t == "a") then (ac+cost, bc) else (ac,bc+cost)) (0, 0)
 
--- addName :: (Show a, Show a1) => (a, a1) -> (a, a1, [Char])
--- addName (ac, bc) = (ac, bc, "-" ++ (show ac) ++ "-" ++ (show bc) )
+addName :: (Show a, Show a1) => (a, a1) -> (a, a1, [Char])
+addName (ac, bc) = (ac, bc, "-" ++ (show ac) ++ "-" ++ (show bc) )
 
 twoCardUpgrades :: [(Integer, Integer)]
 twoCardUpgrades =
@@ -161,6 +161,11 @@ totalCXP = 66
 totalCards :: Integer
 totalCards = 6
 
+-- show autocomplete
+-- show repl
+-- show build errors
+-- show hoogle (maybe with ordering the card results?)
+-- show web site
 lpCards :: Build -> LP String Integer
 lpCards build = execLPM $ do
   leqTo (linCombination (showAll _cost)) totalCXP

@@ -2,6 +2,7 @@ module DamagePen where
 
 import Optimization
 import Data.List
+import Data.Ord
 
 attackSpeed :: Fractional a => a -> a -> a
 attackSpeed bat asm =(1/bat)*asm
@@ -22,14 +23,14 @@ armorPointsToNum ar = ar * 7
 --       pen = pn * 4.0
 --   in (armor-pen) / (100+(armor-pen)+(10*(lvl-1)))
 
-dmgReduction2 :: Integer -> Integer -> Double
+dmgReduction2 :: Double -> Double -> Double
 dmgReduction2 armorpts penpts =
   let effectiveArmor = 31.5 + (7 * armorpts) - (penpts * 4.0)
       realArmor = if (effectiveArmor < 0) then 0 else effectiveArmor
       reduction = (100/(100 + effectiveArmor))
   in if reduction > 1 then 1 else reduction
 
-dps :: Integer -> Integer -> Integer -> Integer -> Integer -> Double -> Double -> Double -> Double -> Double
+dps :: Double -> Double -> Double -> Double -> Double -> Double -> Double -> Double -> Double -> Double
 dps power_points attack_speed_points crit_points pen crit_damage base_damage base_attack_speed scaling lvl =
   let reduction = dmgReduction2 0 pen
       base_dmg = (base_damage+(6*power_points*scaling))
@@ -37,20 +38,13 @@ dps power_points attack_speed_points crit_points pen crit_damage base_damage bas
       crit_bonus = (1+((0.04*crit_points)*(crit_damage-1)))
   in base_dmg * hits_second * crit_bonus * reduction
 
-murdockDps :: Integer -> Integer -> Integer -> Integer -> Integer -> Double
+murdockDps :: Double -> Double -> Double -> Double -> Double -> Double
 murdockDps pwr speed crit pen bonus = dps pwr speed crit pen bonus 86 1.16 1 15
 
 toBuild (dmg,speed,crit,pen,critbonus) =
-  Build { _bpower = dmg
-        , _bspeed = speed
-        , _bcrit = crit
-        , _bpen = pen
-        , _blifesteal = 6
-        , _bcrit_bonus = critbonus
-        , _bward = 1
-        , _bblink = 1}
+  Build { _bpower = 1 , _bspeed = 1 , _bcrit = 1 , _bpen = 1, _blifesteal = 6 , _bcrit_bonus = 1 , _bward = 1 , _bblink = 1}
 
-calcIfUnder :: Integer -> Integer -> Integer -> Integer -> Integer -> Integer -> (Double, Build)
+calcIfUnder :: Double -> Double -> Double -> Double -> Double -> Double -> (Double, Build)
 calcIfUnder dmg speed crit pen critbonus max =
   if (dmg + speed + crit + pen + (critbonus * 6)) == max
   then
@@ -69,8 +63,6 @@ maxDps =
                  crit <- [0..30],
                  pen <- [0..30],
                  critbonus <- [0..1]]
-      (dps,build) = head $ reverse $ sortBy (\(a,_) (b,_) -> sort a b) totals
+      (dps,build) = head $ reverse $ sortBy (comparing fst) totals
   in
     (show dps)
-
-  --let b = Build { _bpower = 15, _bspeed = 12, _bcrit = 13, _bpen = 8, _blifesteal = 6, _bcrit_bonus = 1, _bward = 1, _bblink = 1}
