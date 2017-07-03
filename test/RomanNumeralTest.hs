@@ -11,9 +11,13 @@ testUnfinished =
 
 testToRoman :: Assertion
 testToRoman =
-  (assertEqual "" (toRoman 1) "I")
-  >> (assertEqual "" (toRoman 5) "V")
-  >> (assertEqual "" (toRoman 10) "X")
+  (assertEqual ""    "I" (toRoman 1)  )
+  >> (assertEqual "" "V" (toRoman 5)  )
+  >> (assertEqual "" "X" (toRoman 10) )
+  >> (assertEqual "" "II"(toRoman 2)  )
+  >> (assertEqual "" "IV"(toRoman 4)  )
+  >> (assertEqual "" "VI"(toRoman 6)  )
+  >> (assertEqual "" "VIII"(toRoman 8)  )
 
 tests2 :: TestTree
 tests2 = testGroup "RomanNumeralTests"
