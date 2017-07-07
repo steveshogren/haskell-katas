@@ -31,6 +31,8 @@ testToRoman =
   >> (assertEqual "" "XCI" (toRoman 91))
   >> (assertEqual "" "CXLIV" (toRoman 144))
   >> (assertEqual "" "CDXLVIII" (toRoman 448))
+  >> (assertEqual "" "CDXCIX" (toRoman 499))
+  >> (assertEqual "" "DCCCXCIX" (toRoman 899))
 
 tests2 :: TestTree
 tests2 = testGroup "RomanNumeralTests"
