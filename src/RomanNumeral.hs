@@ -11,6 +11,7 @@ toRoman 10 = "X"
 toRoman 50 = "L"
 toRoman 100 = "C"
 toRoman 500 = "D"
+-- 1 4 5 10 40 50 90 100 400 500
 toRoman arabic =
   if (arabic > 500) then
     (toRoman 500) ++ (toRoman (arabic - 500))
@@ -27,11 +28,11 @@ toRoman arabic =
   else if (arabic > 10) then
     (toRoman 10) ++ (toRoman (arabic - 10))
   else if (arabic >= 9) then
-    (toRoman 1) ++ (toRoman 10)
+    (toRoman 1) ++ (toRoman 10) ++ (toRoman (arabic - 9))
   else if (arabic > 5) then
     (toRoman 5) ++ (toRoman (arabic - 5))
   else if (arabic >= 4) then
-    (toRoman 1) ++ (toRoman 5)
+    (toRoman 1) ++ (toRoman 5) ++ (toRoman (arabic - 4))
   else if (arabic > 1) then
     (toRoman 1) ++ (toRoman (arabic - 1))
-  else "I"
+  else ""
