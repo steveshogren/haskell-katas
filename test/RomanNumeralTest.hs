@@ -4,11 +4,6 @@ import RomanNumeral
 import Test.Tasty
 import Test.Tasty.HUnit
 
-testUnfinished :: Assertion
-testUnfinished =
-  let f = add 1 2
-  in (assertEqual "Add 1 2" f 3)
-
 testToRoman :: Assertion
 testToRoman =
   (assertEqual "" "I" (toRoman 1))
@@ -35,11 +30,11 @@ testToRoman =
   >> (assertEqual "" "CDXCIX" (toRoman 499))
   >> (assertEqual "" "DCCCXCIX" (toRoman 899))
   >> (assertEqual "" "MCMXCVIII" (toRoman 1998))
+  >> (assertEqual "" "MMMCMXCVIII" (toRoman 3998))
 
 tests2 :: TestTree
 tests2 = testGroup "RomanNumeralTests"
   [
-    testCase "simple addition" testUnfinished,
     testCase "toRoman" testToRoman
   ]
 
