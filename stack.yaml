@@ -1,10 +1,8 @@
 flags: {}
 packages:
 - '.'
-extra-deps: ['hmatrix-glpk-0.6.0.0'
-            , 'glpk-hs-0.5'
-            , 'gasp-1.0.1.0'
-            , 'hmatrix-0.18.0.0'
+extra-deps: [
+             'gasp-1.0.1.0'
             , 'cabal-helper-0.6.0.0'
 ]
-resolver: lts-3.6
+resolver: lts-10.2
