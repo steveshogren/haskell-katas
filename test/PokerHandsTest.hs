@@ -16,8 +16,9 @@ da = Card Ace Diamonds
 
 testParse :: Assertion
 testParse =
-  (assertEqual "" (Just h2) (parseCard "2H"))
-  >> (assertEqual "" (Just h10) (parseCard "10H"))
+  (assertEqual "" Nothing (parseCard "Y3"))
+  >> (assertEqual "" (Just h2) (parseCard "2H"))
+  >> (assertEqual "" (Just hq) (parseCard "QH"))
 
 testIsTwoOfAKind :: Assertion
 testIsTwoOfAKind =
