@@ -9,6 +9,8 @@ data Face = Two | Three | Four | Five | Six | Seven | Eight | Nine | Ten | Jack 
 data Card = Card Face Suit
   deriving (Show, Eq)
 
+type Hand = [Card]
+
 isTwoOfAKind :: Bool
 isTwoOfAKind = True
 
@@ -40,4 +42,11 @@ parseCard [first,second] = do
   suit <- parseSuit second
   face <- parseFace first
   return $ Card face suit
+parseCard [first,_,third] = do
+  suit <- parseSuit third
+  face <- parseFace first
+  return $ Card face suit
+parseCard _ = Nothing
 
+parseHand :: String -> Maybe Hand
+parseHand str = Nothing

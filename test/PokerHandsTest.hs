@@ -14,11 +14,17 @@ ca = Card Ace Clubs
 sa = Card Ace Spades
 da = Card Ace Diamonds
 
+hand1 = [h2,h10,hj,hq,hk]
+
 testParse :: Assertion
 testParse =
   (assertEqual "" Nothing (parseCard "Y3"))
   >> (assertEqual "" (Just h2) (parseCard "2H"))
   >> (assertEqual "" (Just hq) (parseCard "QH"))
+  >> (assertEqual "" (Just h10) (parseCard "10H"))
+  >> (assertEqual "" Nothing (parseCard "H"))
+  >> (assertEqual "" (Just hand1) (parseHand "2H 10H HJ HQ HK"))
+
 
 testIsTwoOfAKind :: Assertion
 testIsTwoOfAKind =
