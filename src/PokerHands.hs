@@ -1,5 +1,8 @@
 module PokerHands where
 
+import Data.List.Split(splitOn)
+import Control.Monad(mapM)
+
 data Suit = Hearts | Clubs | Diamonds | Spades
   deriving (Show, Eq)
 
@@ -10,9 +13,6 @@ data Card = Card Face Suit
   deriving (Show, Eq)
 
 type Hand = [Card]
-
-isTwoOfAKind :: Bool
-isTwoOfAKind = True
 
 parseSuit :: Char -> Maybe Suit
 parseSuit 'S' = Just Spades
@@ -49,4 +49,9 @@ parseCard [first,_,third] = do
 parseCard _ = Nothing
 
 parseHand :: String -> Maybe Hand
-parseHand str = Nothing
+parseHand str =
+  let cardStrs = splitOn " " str
+  in mapM parseCard cardStrs
+
+isTwoOfAKind :: Hand -> Bool
+isTwoOfAKind hand = True

@@ -3,6 +3,7 @@ module PokerHandsTest where
 import PokerHands
 import Test.Tasty
 import Test.Tasty.HUnit
+import Data.Maybe(fromMaybe)
 
 h2 = Card Two Hearts
 h10 = Card Ten Hearts
@@ -23,12 +24,13 @@ testParse =
   >> (assertEqual "" (Just hq) (parseCard "QH"))
   >> (assertEqual "" (Just h10) (parseCard "10H"))
   >> (assertEqual "" Nothing (parseCard "H"))
-  >> (assertEqual "" (Just hand1) (parseHand "2H 10H HJ HQ HK"))
-
+  >> (assertEqual "" (Just hand1) (parseHand "2H 10H JH QH KH"))
 
 testIsTwoOfAKind :: Assertion
 testIsTwoOfAKind =
-  (assertEqual "" True isTwoOfAKind)
+  let h1 = fromMaybe [] (parseHand "2H 2S JH QH KH")
+  in (assertEqual "" True (isTwoOfAKind h1))
+     >> (assertEqual "" False (isTwoOfAKind []))
 
 tests2 :: TestTree
 tests2 = testGroup "PokerHandsTests"
