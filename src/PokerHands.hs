@@ -1,13 +1,14 @@
 module PokerHands where
 
 import Data.List.Split(splitOn)
+import Data.List(any, groupBy, sortBy)
 import Control.Monad(mapM)
 
 data Suit = Hearts | Clubs | Diamonds | Spades
   deriving (Show, Eq)
 
-data Face = Two | Three | Four | Five | Six | Seven | Eight | Nine | Ten | Jack | Queen | King | Ace
-  deriving (Show, Eq)
+data Face = Ace| King | Queen | Jack | Ten | Nine | Eight | Seven | Six | Five | Four | Three | Two
+  deriving (Show, Eq, Ord)
 
 data Card = Card Face Suit
   deriving (Show, Eq)
@@ -53,5 +54,15 @@ parseHand str =
   let cardStrs = splitOn " " str
   in mapM parseCard cardStrs
 
-isTwoOfAKind :: Hand -> Bool
-isTwoOfAKind hand = True
+sameFace (Card f1 _) (Card f2 _) = f1 == f2
+
+face (Card f1 _) = f1
+
+isTwoOfAKind :: Hand -> Maybe Face
+isTwoOfAKind hand =
+  let faceGrouped = groupBy sameFace hand
+      moreThanTwo = filter (\a -> length a == 2) faceGrouped
+  in if length moreThanTwo > 0 then
+      let sorted = sortBy (compare) $ map (face . head) moreThanTwo
+      in Just (head sorted)
+     else Nothing

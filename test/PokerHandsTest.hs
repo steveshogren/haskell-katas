@@ -29,8 +29,10 @@ testParse =
 testIsTwoOfAKind :: Assertion
 testIsTwoOfAKind =
   let h1 = fromMaybe [] (parseHand "2H 2S JH QH KH")
-  in (assertEqual "" True (isTwoOfAKind h1))
-     >> (assertEqual "" False (isTwoOfAKind []))
+      h2 = fromMaybe [] (parseHand "2H 2S JH JH KH")
+  in (assertEqual "" (Just Two) (isTwoOfAKind h1))
+     >> (assertEqual "" Nothing (isTwoOfAKind []))
+     >> (assertEqual "" (Just Jack) (isTwoOfAKind h2))
 
 tests2 :: TestTree
 tests2 = testGroup "PokerHandsTests"
