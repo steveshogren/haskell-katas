@@ -54,9 +54,12 @@ parseHand str =
   let cardStrs = splitOn " " str
   in mapM parseCard cardStrs
 
+sameFace :: Card -> Card -> Bool
 sameFace (Card f1 _) (Card f2 _) = f1 == f2
 
+face :: Card -> Face
 face (Card f1 _) = f1
+
 
 isTwoOfAKind :: Hand -> Maybe Face
 isTwoOfAKind hand =
@@ -66,3 +69,18 @@ isTwoOfAKind hand =
       let sorted = sortBy (compare) $ map (face . head) moreThanTwo
       in Just (head sorted)
      else Nothing
+
+isThreeOfAKind :: Hand -> Maybe Face
+isThreeOfAKind hand =
+  let faceGrouped = groupBy sameFace hand
+      moreThanThree = filter (\a -> length a == 3) faceGrouped
+  in if length moreThanThree > 0 then
+      let sorted = sortBy (compare) $ map (face . head) moreThanThree
+      in Just (head sorted)
+     else Nothing
+
+isFullHouse :: Hand -> Maybe (Face,Face)
+isFullHouse hand = do
+  twoKind <- isTwoOfAKind hand
+  threeKind <- isThreeOfAKind hand
+  return (threeKind, twoKind)

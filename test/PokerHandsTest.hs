@@ -34,10 +34,28 @@ testIsTwoOfAKind =
      >> (assertEqual "" Nothing (isTwoOfAKind []))
      >> (assertEqual "" (Just Jack) (isTwoOfAKind h2))
 
+testIsThreeOfAKind :: Assertion
+testIsThreeOfAKind =
+  let h1 = fromMaybe [] (parseHand "2H 2S 2H QH KH")
+      h2 = fromMaybe [] (parseHand "2H 2S JH JH JH")
+  in (assertEqual "" (Just Two) (isThreeOfAKind h1))
+     >> (assertEqual "" Nothing (isThreeOfAKind []))
+     >> (assertEqual "" (Just Jack) (isThreeOfAKind h2))
+
+testIsFullHouse :: Assertion
+testIsFullHouse =
+  let h1 = fromMaybe [] (parseHand "2H 2S 2H QH QH")
+      h2 = fromMaybe [] (parseHand "2H 2S JH JH JH")
+  in (assertEqual "" (Just (Two, Queen)) (isFullHouse h1))
+     >> (assertEqual "" Nothing (isFullHouse []))
+     >> (assertEqual "" (Just (Jack, Two)) (isFullHouse h2))
+
 tests2 :: TestTree
 tests2 = testGroup "PokerHandsTests"
   [
     testCase "isTwoOfAKind" testIsTwoOfAKind
+    , testCase "isThreeOfAKind" testIsThreeOfAKind
+    , testCase "isFullHouse" testIsFullHouse
     , testCase "parse" testParse
   ]
 
