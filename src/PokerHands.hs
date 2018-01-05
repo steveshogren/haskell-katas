@@ -60,27 +60,34 @@ sameFace (Card f1 _) (Card f2 _) = f1 == f2
 face :: Card -> Face
 face (Card f1 _) = f1
 
+isOfAKind :: Bool -> Int -> Hand -> Maybe Face
+isOfAKind reverse size hand =
+  let faceGrouped = groupBy sameFace hand
+      moreThanN = filter (\a -> length a == size) faceGrouped
+  in if length moreThanN > 0 then
+      let sorted = sortBy (compare) $ map (face . head) moreThanN
+      in Just (head sorted)
+     else Nothing
 
 isTwoOfAKind :: Hand -> Maybe Face
-isTwoOfAKind hand =
-  let faceGrouped = groupBy sameFace hand
-      moreThanTwo = filter (\a -> length a == 2) faceGrouped
-  in if length moreThanTwo > 0 then
-      let sorted = sortBy (compare) $ map (face . head) moreThanTwo
-      in Just (head sorted)
-     else Nothing
+isTwoOfAKind hand = isOfAKind False 2 hand
 
 isThreeOfAKind :: Hand -> Maybe Face
-isThreeOfAKind hand =
-  let faceGrouped = groupBy sameFace hand
-      moreThanThree = filter (\a -> length a == 3) faceGrouped
-  in if length moreThanThree > 0 then
-      let sorted = sortBy (compare) $ map (face . head) moreThanThree
-      in Just (head sorted)
-     else Nothing
+isThreeOfAKind hand = isOfAKind False 3 hand
+
+isFourOfAKind :: Hand -> Maybe Face
+isFourOfAKind hand = isOfAKind False 4 hand
 
 isFullHouse :: Hand -> Maybe (Face,Face)
 isFullHouse hand = do
   twoKind <- isTwoOfAKind hand
   threeKind <- isThreeOfAKind hand
   return (threeKind, twoKind)
+
+isTwoPair :: Hand -> Maybe (Face,Face)
+isTwoPair hand = do
+  twoKindA <- isOfAKind False 2 hand
+  twoKindB <- isOfAKind True 2 hand
+  if (twoKindA /= twoKindB) then
+    return (twoKindA, twoKindB)
+  else Nothing
