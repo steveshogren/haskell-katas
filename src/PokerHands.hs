@@ -1,19 +1,9 @@
 module PokerHands where
 
 import Data.List.Split(splitOn)
-import Data.List(any, groupBy, sortBy)
+import Data.List(any, groupBy, sortBy, all)
 import Control.Monad(mapM)
-
-data Suit = Hearts | Clubs | Diamonds | Spades
-  deriving (Show, Eq)
-
-data Face = Ace| King | Queen | Jack | Ten | Nine | Eight | Seven | Six | Five | Four | Three | Two
-  deriving (Show, Eq, Ord)
-
-data Card = Card Face Suit
-  deriving (Show, Eq)
-
-type Hand = [Card]
+import Data.Maybe(catMaybes)
 
 parseSuit :: Char -> Maybe Suit
 parseSuit 'S' = Just Spades
@@ -38,6 +28,30 @@ parseFace 'K' = Just King
 parseFace 'A' = Just Ace
 parseFace _ = Nothing
 
+
+data Suit = Hearts | Clubs | Diamonds | Spades
+  deriving (Show, Eq, Ord)
+
+data Face = Ace | King | Queen | Jack | Ten | Nine | Eight | Seven | Six | Five | Four | Three | Two
+  deriving (Show, Eq, Ord, Enum)
+
+data AHand = RoyalFlush Suit
+           | StraightFlush (Face, Suit)
+           | FourOfAKind Face
+           | FullHouse (Face,Face)
+           | Flush Suit
+           | Straight Face
+           | ThreeOfAKind Face
+           | TwoPair (Face, Face)
+           | TwoOfAKind Face
+           | HighCard Face
+  deriving (Show, Eq, Ord)
+
+data Card = Card Face Suit
+  deriving (Show, Eq)
+
+type Hand = [Card]
+
 parseCard :: String -> Maybe Card
 parseCard [first,second] = do
   suit <- parseSuit second
@@ -60,34 +74,69 @@ sameFace (Card f1 _) (Card f2 _) = f1 == f2
 face :: Card -> Face
 face (Card f1 _) = f1
 
-isOfAKind :: Bool -> Int -> Hand -> Maybe Face
-isOfAKind reverse size hand =
+isOfAKind :: Bool -> Int -> Hand -> (Face -> AHand) -> Maybe AHand
+isOfAKind rev size hand t =
   let faceGrouped = groupBy sameFace hand
       moreThanN = filter (\a -> length a == size) faceGrouped
+      reverseFn = if rev then reverse else id
   in if length moreThanN > 0 then
-      let sorted = sortBy (compare) $ map (face . head) moreThanN
-      in Just (head sorted)
+      let sorted = reverseFn $ sortBy (compare) $ map (face . head) moreThanN
+      in Just $ t (head sorted)
      else Nothing
 
-isTwoOfAKind :: Hand -> Maybe Face
-isTwoOfAKind hand = isOfAKind False 2 hand
+isTwoOfAKind :: Hand -> Maybe AHand
+isTwoOfAKind hand = isOfAKind False 2 hand TwoOfAKind
 
-isThreeOfAKind :: Hand -> Maybe Face
-isThreeOfAKind hand = isOfAKind False 3 hand
+isThreeOfAKind :: Hand -> Maybe AHand
+isThreeOfAKind hand = isOfAKind False 3 hand ThreeOfAKind
 
-isFourOfAKind :: Hand -> Maybe Face
-isFourOfAKind hand = isOfAKind False 4 hand
+isFourOfAKind :: Hand -> Maybe AHand
+isFourOfAKind hand = isOfAKind False 4 hand FourOfAKind
 
-isFullHouse :: Hand -> Maybe (Face,Face)
+isFullHouse :: Hand -> Maybe AHand
 isFullHouse hand = do
-  twoKind <- isTwoOfAKind hand
-  threeKind <- isThreeOfAKind hand
-  return (threeKind, twoKind)
+  TwoOfAKind twoKind <- isTwoOfAKind hand
+  ThreeOfAKind threeKind <- isThreeOfAKind hand
+  return $ FullHouse (threeKind, twoKind)
 
-isTwoPair :: Hand -> Maybe (Face,Face)
+isTwoPair :: Hand -> Maybe AHand
 isTwoPair hand = do
-  twoKindA <- isOfAKind False 2 hand
-  twoKindB <- isOfAKind True 2 hand
+  TwoOfAKind twoKindA <- isOfAKind False 2 hand TwoOfAKind
+  TwoOfAKind twoKindB <- isOfAKind True 2 hand TwoOfAKind
   if (twoKindA /= twoKindB) then
-    return (twoKindA, twoKindB)
+    return $ TwoPair (twoKindA, twoKindB)
   else Nothing
+
+isStraight :: Hand -> Maybe AHand
+isStraight hand =
+  let sorted = sortBy (compare) $ map face hand
+      expected = enumFromTo (head sorted) (head . reverse $ sorted)
+  in if sorted == expected then
+       Just $ Straight (head sorted)
+     else Nothing
+
+suit :: Card -> Suit
+suit (Card _ s) = s
+
+isFlush :: Hand -> Maybe AHand
+isFlush hand =
+  let firstSuit = suit $ head hand
+  in if all (== firstSuit) $ map suit hand then
+       Just $ Flush firstSuit
+     else Nothing
+
+isRoyalFlush :: Hand -> Maybe AHand
+isRoyalFlush hand = do
+  Flush suit <- isFlush hand
+  Straight straightHigh <- isStraight hand
+  if straightHigh == Ace then
+    return $ RoyalFlush suit
+  else Nothing
+
+
+isFunctions = [isRoyalFlush,isFlush, isStraight,isTwoPair,isThreeOfAKind,isTwoOfAKind,isFullHouse,isFourOfAKind]
+
+convertHand :: String -> Maybe AHand
+convertHand str = do
+  hand <- parseHand str
+  return $ head $ sortBy compare $ catMaybes $ map (\f -> f hand) isFunctions
