@@ -30,7 +30,7 @@ parseFace _ = Nothing
 
 
 data Suit = Hearts | Clubs | Diamonds | Spades
-  deriving (Show, Eq, Ord)
+  deriving (Show, Eq, Ord, Enum)
 
 data Face = Ace | King | Queen | Jack | Ten | Nine | Eight | Seven | Six | Five | Four | Three | Two
   deriving (Show, Eq, Ord, Enum)
@@ -133,10 +133,17 @@ isRoyalFlush hand = do
     return $ RoyalFlush suit
   else Nothing
 
-
+isFunctions :: [Hand -> Maybe AHand]
 isFunctions = [isRoyalFlush,isFlush, isStraight,isTwoPair,isThreeOfAKind,isTwoOfAKind,isFullHouse,isFourOfAKind]
 
-convertHand :: String -> Maybe AHand
-convertHand str = do
+pristineDeck :: [Card]
+pristineDeck = [ Card rank suit | suit <- [Hearts .. Spades], rank <- [Ace .. Two] ]
+
+convertHand :: String -> Face -> Maybe AHand
+convertHand str wild = do
   hand <- parseHand str
-  return $ head $ sortBy compare $ catMaybes $ map (\f -> f hand) isFunctions
+  let wilds = filter (\c -> face c == wild) hand
+      notwilds = filter (\c -> face c /= wild) hand
+      allHands = [ [wild] ++ notwilds | _ <- wilds, wild <- pristineDeck]
+      hands = if null wilds then [hand] else allHands
+  return $ head $ sortBy compare $ catMaybes $ concatMap (\f -> map f hands) isFunctions
