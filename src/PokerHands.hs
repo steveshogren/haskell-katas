@@ -1,9 +1,10 @@
 module PokerHands where
 
 import Data.List.Split(splitOn)
-import Data.List(any, groupBy, sortBy, all)
+import Data.List(any, groupBy, sortBy, all, transpose)
 import Control.Monad(mapM)
 import Data.Maybe(catMaybes)
+import Debug.Trace (trace)
 
 parseSuit :: Char -> Maybe Suit
 parseSuit 'S' = Just Spades
@@ -48,7 +49,7 @@ data AHand = RoyalFlush Suit
   deriving (Show, Eq, Ord)
 
 data Card = Card Face Suit
-  deriving (Show, Eq)
+  deriving (Show, Eq, Ord)
 
 type Hand = [Card]
 
@@ -76,7 +77,7 @@ face (Card f1 _) = f1
 
 isOfAKind :: Bool -> Int -> Hand -> (Face -> AHand) -> Maybe AHand
 isOfAKind rev size hand t =
-  let faceGrouped = groupBy sameFace hand
+  let faceGrouped = groupBy sameFace $ sortBy compare hand
       moreThanN = filter (\a -> length a == size) faceGrouped
       reverseFn = if rev then reverse else id
   in if length moreThanN > 0 then
@@ -137,13 +138,18 @@ isFunctions :: [Hand -> Maybe AHand]
 isFunctions = [isRoyalFlush,isFlush, isStraight,isTwoPair,isThreeOfAKind,isTwoOfAKind,isFullHouse,isFourOfAKind]
 
 pristineDeck :: [Card]
-pristineDeck = [ Card rank suit | suit <- [Hearts .. Spades], rank <- [Ace .. Two] ]
+pristineDeck = [Card rank suit | suit <- [Hearts .. Spades], rank <- [Ace .. Two] ]
+
+permutations :: Int -> [a] -> [[a]]
+permutations depth list =
+  let decks = replicate depth list
+  in sequence decks
 
 convertHand :: String -> Face -> Maybe AHand
 convertHand str wild = do
   hand <- parseHand str
   let wilds = filter (\c -> face c == wild) hand
-      notwilds = filter (\c -> face c /= wild) hand
-      allHands = [ [wild] ++ notwilds | _ <- wilds, wild <- pristineDeck]
+      notwilds =  filter (\c -> face c /= wild) hand
+      allHands = [wild ++ notwilds | wild <- (permutations (length wilds) pristineDeck)]
       hands = if null wilds then [hand] else allHands
-  return $ head $ sortBy compare $ catMaybes $ concatMap (\f -> map f hands) isFunctions
+  return $ head $ sortBy compare $ catMaybes $ [f hand | hand <- hands,f <- isFunctions]
