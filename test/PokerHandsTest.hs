@@ -91,33 +91,39 @@ testIsRoyalFlush =
 
 testDetectHand :: Assertion
 testDetectHand =
-   (assertEqual "" (Just $ RoyalFlush Hearts) (convertHand "JH KH QH AH 10H" Ace))
-   >> (assertEqual "" (Just $ Flush Hearts) (convertHand  "7H 3H 4H 5H 6H" Ace))
-   >> (assertEqual "" (Just $ Straight Seven) (convertHand  "7H 3S 4H 5H 6H" Ace))
-   >> (assertEqual "" (Just $ TwoPair (Queen, Two)) (convertHand  "2H 2S 3H QH QH" Ace))
-   >> (assertEqual "" (Just $ TwoOfAKind Two) (convertHand "2H 2S JH QH KH" Ace))
-   >> (assertEqual "" (Just $ ThreeOfAKind Two) (convertHand "2H 2S 2H QH KH" Ace))
-   >> (assertEqual "" (Just $ FourOfAKind Two) (convertHand  "2H 2S 2H 2H KH" Ace))
-   >> (assertEqual "" (Just $ FullHouse (Two, Queen)) (convertHand  "2H 2S 2H QH QH" Ace))
-   >> (assertEqual "no wild" (Just $ FullHouse (Queen, Two)) (convertHand  "2H 2S QH QH QH" Ace))
-   >> (assertEqual "" (Nothing) (convertHand  "uH 2S 2H QH QH" Ace))
-   >> (assertEqual "" (Nothing) (convertHand  "5Y2S2HQHQH" Ace))
+   (assertEqual "" (Just $ RoyalFlush Hearts) (convertHand "JH KH QH AH 10H" Nothing))
+   >> (assertEqual "" (Just $ Flush Hearts) (convertHand  "7H 3H 4H 5H 6H" Nothing))
+   >> (assertEqual "" (Just $ Straight Seven) (convertHand  "7H 3S 4H 5H 6H" Nothing))
+   >> (assertEqual "" (Just $ TwoPair (Queen, Two)) (convertHand  "2H 2S 3H QH QH" Nothing))
+   >> (assertEqual "" (Just $ TwoOfAKind Two) (convertHand "2H 2S JH QH KH" Nothing))
+   >> (assertEqual "" (Just $ ThreeOfAKind Two) (convertHand "2H 2S 2H QH KH" Nothing))
+   >> (assertEqual "" (Just $ FourOfAKind Two) (convertHand  "2H 2S 2H 2H KH" Nothing))
+   >> (assertEqual "" (Just $ FullHouse (Two, Queen)) (convertHand  "2H 2S 2H QH QH" Nothing))
+   >> (assertEqual "no wild" (Just $ FullHouse (Queen, Two)) (convertHand  "2H 2S QH QH QH" Nothing))
+   >> (assertEqual "" (Nothing) (convertHand  "uH 2S 2H QH QH" Nothing))
+   >> (assertEqual "" (Nothing) (convertHand  "5Y2S2HQHQH" Nothing))
    -- wilds
-   >> (assertEqual "wild 1" (Just $ TwoOfAKind Queen) (convertHand  "2H 3S AS 6H QS" Ace))
-   >> (assertEqual "wild 2" (Just $ FullHouse (Queen, Two)) (convertHand  "2H 2S AS QH QS" Ace))
-   >> (assertEqual "wild 3" (Just $ Straight Queen) (convertHand  "JH 10S 8S 9H AS" Ace))
-   >> (assertEqual "wild 4" (Just $ ThreeOfAKind Ace) (convertHand "2H 2S 3S 9H AS" Two))
-   >> (assertEqual "wild 5" (Just $ FourOfAKind Ace) (convertHand "2H 2S 2S 9H AS" Two))
+   >> (assertEqual "wild 1" (Just $ TwoOfAKind Queen) (convertHand  "2H 3S AS 6H QS" (Just Ace)))
+   >> (assertEqual "wild 2" (Just $ FullHouse (Queen, Two)) (convertHand  "2H 2S AS QH QS" (Just Ace)))
+   >> (assertEqual "wild 3" (Just $ Straight Queen) (convertHand  "JH 10S 8S 9H AS" (Just Ace)))
+   >> (assertEqual "wild 4" (Just $ ThreeOfAKind Ace) (convertHand "2H 2S 3S 9H AS" (Just Two)))
+   >> (assertEqual "wild 5" (Just $ FourOfAKind Ace) (convertHand "2H 2S 2S 9H AS" (Just Two)))
 
 testPerms :: Assertion
 testPerms =
    (assertEqual "depth 2" [[x,y] | x <- ['a'..'c'], y <- ['a'..'c']] (permutations 2 ['a'..'c']))
     >> (assertEqual "depth 3" [[x,y,z] | x <- ['a'..'c'], y <- ['a'..'c'], z <- ['a'..'c']] (permutations 3 ['a'..'c']))
 
+testWinningHand :: Assertion
+testWinningHand =
+   (assertEqual "" (Left $ RoyalFlush Hearts) (winningHand (RoyalFlush Hearts) (Flush Hearts)))
+   >> (assertEqual "" (Right $ Straight Six) (winningHand (Straight Five) (Straight Six)))
+
 tests2 :: TestTree
 tests2 = testGroup "PokerHandsTests"
   [
-     testCase "isTwoOfAKind" testIsTwoOfAKind
+     testCase "parse" testParse
+     , testCase "isTwoOfAKind" testIsTwoOfAKind
      , testCase "isThreeOfAKind" testIsThreeOfAKind
      , testCase "isFullHouse" testIsFullHouse
      , testCase "isTwoPair" testIsTwoPair
@@ -127,7 +133,7 @@ tests2 = testGroup "PokerHandsTests"
      , testCase "isRoyalFlush" testIsRoyalFlush
      , testCase "detectHand" testDetectHand
      , testCase "perms" testPerms
-     , testCase "parse" testParse
+     , testCase "winningHand" testWinningHand
   ]
 
 runner = defaultMain tests2

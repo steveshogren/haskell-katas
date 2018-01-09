@@ -29,7 +29,6 @@ parseFace 'K' = Just King
 parseFace 'A' = Just Ace
 parseFace _ = Nothing
 
-
 data Suit = Hearts | Clubs | Diamonds | Spades
   deriving (Show, Eq, Ord, Enum)
 
@@ -145,7 +144,7 @@ permutations depth list =
   let decks = replicate depth list
   in sequence decks
 
-convertHand :: String -> Face -> Maybe AHand
+convertHand :: String -> Maybe Face -> Maybe AHand
 convertHand str wild = do
   hand <- parseHand str
   let wilds = filter (\c -> face c == wild) hand
@@ -153,3 +152,7 @@ convertHand str wild = do
       allHands = [wild ++ notwilds | wild <- (permutations (length wilds) pristineDeck)]
       hands = if null wilds then [hand] else allHands
   return $ head $ sortBy compare $ catMaybes $ [f hand | hand <- hands,f <- isFunctions]
+
+winningHand :: AHand -> AHand -> Either AHand AHand
+winningHand left right =
+  if left < right then Left left else Right right
