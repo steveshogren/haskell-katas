@@ -144,13 +144,18 @@ permutations depth list =
   let decks = replicate depth list
   in sequence decks
 
+deckPermutations :: (Maybe Face) -> Hand -> [Hand]
+deckPermutations (Just wild) hand =
+  let wilds = filter (\c -> face c == wild) hand
+      notwilds = filter (\c -> face c /= wild) hand
+      allHands = [wild ++ notwilds | wild <- (permutations (length wilds) pristineDeck)]
+  in if null wilds then [hand] else allHands
+deckPermutations Nothing hand = [hand]
+
 convertHand :: String -> Maybe Face -> Maybe AHand
 convertHand str wild = do
   hand <- parseHand str
-  let wilds = filter (\c -> face c == wild) hand
-      notwilds =  filter (\c -> face c /= wild) hand
-      allHands = [wild ++ notwilds | wild <- (permutations (length wilds) pristineDeck)]
-      hands = if null wilds then [hand] else allHands
+  let hands = deckPermutations wild hand
   return $ head $ sortBy compare $ catMaybes $ [f hand | hand <- hands,f <- isFunctions]
 
 winningHand :: AHand -> AHand -> Either AHand AHand
