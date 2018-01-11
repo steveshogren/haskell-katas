@@ -1,7 +1,7 @@
 module PokerHands where
 
 import Data.List.Split(splitOn)
-import Data.List(any, groupBy, sortBy, all, transpose)
+import Data.List(any, groupBy, sortBy, all, transpose, sort)
 import Control.Monad(mapM)
 import Data.Maybe(catMaybes)
 import Debug.Trace (trace)
@@ -144,19 +144,31 @@ permutations depth list =
   let decks = replicate depth list
   in sequence decks
 
+dropN n [] = []
+dropN n xs = let (ys,zs) = splitAt n xs
+             in ys ++ (tail zs)
+
 deckPermutations :: (Maybe Face) -> Hand -> [Hand]
 deckPermutations (Just wild) hand =
   let wilds = filter (\c -> face c == wild) hand
       notwilds = filter (\c -> face c /= wild) hand
       allHands = [wild ++ notwilds | wild <- (permutations (length wilds) pristineDeck)]
-  in if null wilds then [hand] else allHands
-deckPermutations Nothing hand = [hand]
+  in concatMap (deckPermutations Nothing) allHands
+deckPermutations Nothing hand =
+  if length hand > 5 then
+    let idsToDrop = [sort [i1, i2] | i1 <- [0..(length hand)-1],
+                                     i2 <- [0..(length hand)-1]]
+    in foldl (\ret [i1,i2] ->
+                     if i1 == i2 then ret
+                     else [(dropN i1 $ dropN i2 hand)]++ret) [] idsToDrop
+  else
+    [hand]
 
 convertHand :: String -> Maybe Face -> Maybe AHand
 convertHand str wild = do
   hand <- parseHand str
   let hands = deckPermutations wild hand
-  return $ head $ sortBy compare $ catMaybes $ [f hand | hand <- hands,f <- isFunctions]
+  return $ head $ sortBy compare $ catMaybes [f hand | hand <- hands, f <- isFunctions]
 
 winningHand :: AHand -> AHand -> Either AHand AHand
 winningHand left right =

@@ -91,23 +91,25 @@ testIsRoyalFlush =
 
 testDetectHand :: Assertion
 testDetectHand =
-   (assertEqual "" (Just $ RoyalFlush Hearts) (convertHand "JH KH QH AH 10H" Nothing))
-   >> (assertEqual "" (Just $ Flush Hearts) (convertHand  "7H 3H 4H 5H 6H" Nothing))
+   (assertEqual "" (Just $ Flush Hearts) (convertHand  "7H 3H 4H 5H 6H" Nothing))
    >> (assertEqual "" (Just $ Straight Seven) (convertHand  "7H 3S 4H 5H 6H" Nothing))
    >> (assertEqual "" (Just $ TwoPair (Queen, Two)) (convertHand  "2H 2S 3H QH QH" Nothing))
    >> (assertEqual "" (Just $ TwoOfAKind Two) (convertHand "2H 2S JH QH KH" Nothing))
    >> (assertEqual "" (Just $ ThreeOfAKind Two) (convertHand "2H 2S 2H QH KH" Nothing))
    >> (assertEqual "" (Just $ FourOfAKind Two) (convertHand  "2H 2S 2H 2H KH" Nothing))
    >> (assertEqual "" (Just $ FullHouse (Two, Queen)) (convertHand  "2H 2S 2H QH QH" Nothing))
-   >> (assertEqual "no wild" (Just $ FullHouse (Queen, Two)) (convertHand  "2H 2S QH QH QH" Nothing))
+   >> (assertEqual "" (Just $ RoyalFlush Hearts) (convertHand "JH KH QH AH 10H 2S 4C" Nothing))
+   >> (assertEqual "no wild" (Just $ FullHouse (Queen, Two)) (convertHand  "2H 2S 4S QH 6C QH QH" Nothing))
    >> (assertEqual "" (Nothing) (convertHand  "uH 2S 2H QH QH" Nothing))
    >> (assertEqual "" (Nothing) (convertHand  "5Y2S2HQHQH" Nothing))
    -- wilds
-   >> (assertEqual "wild 1" (Just $ TwoOfAKind Queen) (convertHand  "2H 3S AS 6H QS" (Just Ace)))
+   >> (assertEqual "wild 1" (Just $ TwoOfAKind Queen) (convertHand  "JH 3S AS 6H QS 2H 8D" (Just Ace)))
    >> (assertEqual "wild 2" (Just $ FullHouse (Queen, Two)) (convertHand  "2H 2S AS QH QS" (Just Ace)))
-   >> (assertEqual "wild 3" (Just $ Straight Queen) (convertHand  "JH 10S 8S 9H AS" (Just Ace)))
+   >> (assertEqual "wild 3" (Just $ Straight Queen) (convertHand  "4H JH 10S 8S 3D 9H AS" (Just Ace)))
    >> (assertEqual "wild 4" (Just $ ThreeOfAKind Ace) (convertHand "2H 2S 3S 9H AS" (Just Two)))
    >> (assertEqual "wild 5" (Just $ FourOfAKind Ace) (convertHand "2H 2S 2S 9H AS" (Just Two)))
+   >> (assertEqual "wild 6" (Just $ ThreeOfAKind Two) (convertHand "2H 2S 2S 9H AS" (Just Three)))
+   >> (assertEqual "wild 7" (Just $ FourOfAKind Two) (convertHand "2H 2S 2S 9H AS 3D 2D" (Just Four)))
 
 testPerms :: Assertion
 testPerms =
