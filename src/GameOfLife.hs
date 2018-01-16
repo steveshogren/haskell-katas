@@ -45,6 +45,7 @@ printBoard board size =
                       cellString = if live then "|X" else"| "
                   in if y == size then cellString ++ "\n" else cellString) empty
 
+playGame :: [Cell] -> Int -> IO b
 playGame board size = do
   printBoard board size >> threadDelay 1000000
   let newBoard = stepBoard board
