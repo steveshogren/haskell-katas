@@ -25,6 +25,8 @@ stepCell board cell@(Cell s x y) =
    let liveCount = liveNeighborCount board cell
    in if liveCount < 2 || (liveCount > 3 && s)
    then Cell False x y
+   else if (liveCount < 1 && liveCount > 3) && s
+   then cell
    else if liveCount == 3 && (not s)
         then Cell True x y
         else cell
@@ -37,13 +39,16 @@ status :: Foldable t => t Cell -> [Int] -> Bool
 status board [x,y] =
   foldl (\ret (Cell s cx cy) -> if (cx == x) && (cy==y) then s else ret) False board
 
+populateBoard board size =
+  let empty = [[x,y] | x <- [0..size], y <- [0..size]]
+  in map (\cell@[x,y] -> if status board cell then Cell True x y else Cell False x y) empty
+
 printBoard :: Foldable t => t Cell -> Int -> IO ()
 printBoard board size =
-  let empty = [[x,y] | x <- [0..size], y <- [0..size]]
-  in putStr $ "----\n" ++ concatMap (\cell@[x,y] ->
-                  let live = status board cell
-                      cellString = if live then "|X" else"| "
-                  in if y == size then cellString ++ "\n" else cellString) empty
+  let b = populateBoard board size
+  in putStr $ "----\n" ++ concatMap (\cell@(Cell live x y) ->
+                  let cellString = if live then "|X" else"| "
+                  in if y == size then cellString ++ "\n" else cellString) b
 
 playGame :: [Cell] -> Int -> IO b
 playGame board size = do

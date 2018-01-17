@@ -25,7 +25,10 @@ testStepBoard =
       >> (assertEqual "S2" (Cell False 1 0) (stepCell dieOverpop (Cell True 1 0)))
       >> (assertEqual "S3" (Cell True 1 0) (stepCell growExactPop (Cell False 1 0)))
       >> (assertEqual "S4" (Cell True 1 0) (stepCell twoLives (Cell True 1 0)))
-      >> (assertEqual "S5" spinner3 (stepBoard spinner))
+      >> (assertEqual "S5a" (Cell True 1 2) (stepCell spinner (Cell False 1 2)))
+      >> (assertEqual "S5b" (Cell True 1 0) (stepCell spinner (Cell False 1 0)))
+      >> (assertEqual "S5c" (Cell True 1 1) (stepCell spinner (Cell True 1 1)))
+      >> (assertEqual "S6" (populateBoard spinner2 2) (stepBoard (populateBoard spinner 2)))
 
 tests2 :: TestTree
 tests2 = testGroup "GameOfLifeTests"
