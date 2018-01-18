@@ -53,9 +53,19 @@ printBoard board size =
 playGame :: [Cell] -> Int -> IO b
 playGame board size = do
   printBoard board size >> threadDelay 1000000
-  let newBoard = stepBoard board
+  let newBoard = stepBoard (populateBoard board size)
   playGame newBoard size
 
 
-bBoard :: [Cell]
-bBoard = [Cell True 2 1, Cell True 1 1, Cell True 0 1]
+spinner :: [Cell]
+spinner = [Cell True 2 1, Cell True 1 1, Cell True 0 1]
+
+block :: [Cell]
+block = [Cell True 2 1, Cell True 1 1, Cell True 1 2, Cell True 2 2]
+
+beacon :: [Cell]
+beacon = [Cell True 2 1, Cell True 1 1, Cell True 1 2, Cell True 2 2,
+          Cell True 3 3, Cell True 4 4, Cell True 3 4, Cell True 4 3]
+
+glider :: [Cell]
+glider = [Cell True 2 1, Cell True 2 2, Cell True 2 3, Cell True 1 3, Cell True 0 2]
