@@ -7,15 +7,15 @@ import PokerHands
 import PokerHoldEm as PHE
 
 
-p1Hand = (Card Ace Spades,Card Ace Diamonds)
-p2Hand = (Card Two Spades,Card Two Diamonds)
+pHand1 = (Card Ace Spades,Card Ace Diamonds)
+pHand2 = (Card Two Spades,Card Two Diamonds)
 board1 = []
 
 testPercentage :: Assertion
 testPercentage =
    (assertEqual "should correctly determine winner percentage"
-    (100,0)
-    (PHE.percentage [] p1Hand p2Hand ))
+    100
+    (PHE.percentage [] 47 pHand1))
 
 tests2 :: TestTree
 tests2 = testGroup "PokerHandsTests"

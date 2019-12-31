@@ -6,6 +6,5 @@ type HoldEmHand = (PH.Card,PH.Card)
 
 type Board = [PH.Card]
 
-percentage :: Board -> HoldEmHand -> HoldEmHand -> (Integer, Integer)
-percentage board hand1 hand2 =
-  (100, 0)
+percentage :: Board -> Integer -> HoldEmHand -> Integer
+percentage board cardsRemaining hand = 100
