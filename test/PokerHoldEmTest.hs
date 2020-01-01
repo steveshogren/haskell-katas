@@ -5,22 +5,23 @@ import Test.Tasty.HUnit
 
 import PokerHands
 import PokerHoldEm as PHE
+import Data.Maybe(fromMaybe)
 
-
-pHand1 = (Card Ace Spades,Card Ace Diamonds)
 pHand2 = (Card Two Spades,Card Two Diamonds)
 board1 = []
 
-testPercentage :: Assertion
-testPercentage =
-   (assertEqual "should correctly determine winner percentage"
-    100
-    (PHE.percentage [] 47 pHand1))
+testOutCounter :: Assertion
+testOutCounter =
+   let flop = fromMaybe [] (parseHand "QD 2H 9S")
+       pHand1 = (Card Four Spades,Card Four Diamonds)
+   in (assertEqual "detects two outs"
+       2
+       (PHE.outCount flop 47 pHand1))
 
 tests2 :: TestTree
 tests2 = testGroup "PokerHandsTests"
   [
-      testCase "percentages" testPercentage
+      testCase "percentages" testOutCounter
   ]
 
 runner = defaultMain tests2
