@@ -7,21 +7,54 @@ import PokerHands
 import PokerHoldEm as PHE
 import Data.Maybe(fromMaybe)
 
-pHand2 = (Card Two Spades,Card Two Diamonds)
+pHand2 = [Card Two Spades,Card Two Diamonds]
 board1 = []
 
-testOutCounter :: Assertion
-testOutCounter =
+testOutCounterPocketPair :: Assertion
+testOutCounterPocketPair =
    let flop = fromMaybe [] (parseHand "QD 2H 9S")
-       pHand1 = (Card Four Spades,Card Four Diamonds)
-   in (assertEqual "detects two outs"
-       2
-       (PHE.outCount flop 47 pHand1))
+       hand = fromMaybe [] (parseHand "4D 4H")
+   in (assertEqual "pocket pair" 2 (PHE.outCount flop hand))
+
+testOutCounterOneOvercard :: Assertion
+testOutCounterOneOvercard =
+   let flop = fromMaybe [] (parseHand "5D 8H 9S")
+       hand = fromMaybe [] (parseHand "QH 2H")
+   in (assertEqual "one overcard" 3 (PHE.outCount flop hand))
+
+testOutCounterTwoOvercard :: Assertion
+testOutCounterTwoOvercard =
+   let flop = fromMaybe [] (parseHand "5D 8H 2S")
+       hand = fromMaybe [] (parseHand "QH 9H")
+   in (assertEqual "two overcard" 6 (PHE.outCount flop hand))
+
+testOutCounterTwoPairToFullHouse :: Assertion
+testOutCounterTwoPairToFullHouse =
+   let flop = fromMaybe [] (parseHand "QD 2H 9S")
+       hand = fromMaybe [] (parseHand "QH 9H")
+   in (assertEqual "two pair to full" 4 (PHE.outCount flop hand))
+
+testOverCardCount :: Assertion
+testOverCardCount =
+   let flop = fromMaybe [] (parseHand "5D 8H 9S")
+       hand = fromMaybe [] (parseHand "QH 2H")
+   in (assertEqual "one overcard" 1 (PHE.overCardCount flop hand))
+
+testTwoOverCardCount :: Assertion
+testTwoOverCardCount =
+   let flop = fromMaybe [] (parseHand "5D 8H 2S")
+       hand = fromMaybe [] (parseHand "QH 9H")
+   in (assertEqual "Two overcards" 2 (PHE.overCardCount flop hand))
 
 tests2 :: TestTree
 tests2 = testGroup "PokerHandsTests"
   [
-      testCase "percentages" testOutCounter
+      testCase "pocket pair" testOutCounterPocketPair
+      --, testCase "one overcard" testOutCounterOneOvercard
+      , testCase "two pair to full house" testOutCounterTwoPairToFullHouse
+      --, testCase "two overcards" testOutCounterTwoOvercard
+      , testCase "1 overcard count" testOverCardCount
+      , testCase "2 overcard count" testTwoOverCardCount
   ]
 
 runner = defaultMain tests2
