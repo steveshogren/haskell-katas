@@ -50,9 +50,9 @@ tests2 :: TestTree
 tests2 = testGroup "PokerHandsTests"
   [
       testCase "pocket pair" testOutCounterPocketPair
-      --, testCase "one overcard" testOutCounterOneOvercard
+      , testCase "one overcard" testOutCounterOneOvercard
       , testCase "two pair to full house" testOutCounterTwoPairToFullHouse
-      --, testCase "two overcards" testOutCounterTwoOvercard
+      , testCase "two overcards" testOutCounterTwoOvercard
       , testCase "1 overcard count" testOverCardCount
       , testCase "2 overcard count" testTwoOverCardCount
   ]

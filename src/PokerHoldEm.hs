@@ -13,12 +13,15 @@ overCardCount flop hand =
      $ take 2 sorted
 
 outCount :: [PH.Card] -> [PH.Card] -> Integer
-outCount board hand =
-  let testHand =  hand ++ board
+outCount flop hand =
+  let testHand =  hand ++ flop
+      overCardCounts = overCardCount flop hand
   in
     if isJust (isTwoPair testHand) then 4
     else if isJust (isTwoOfAKind testHand) then 2
+    else if 1 == (overCardCount flop hand)  then 3
+    else if 2 == (overCardCount flop hand)  then 6
     else 0
 
 percentage :: [PH.Card] -> [PH.Card] -> Integer
-percentage board hand = 100
+percentage flop hand = 100

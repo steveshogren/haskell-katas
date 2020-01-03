@@ -15,6 +15,6 @@ main = defaultMain (testGroup "new group" [
                      --, GOL.tests2
                      --, HT.tests
                      --, RN.tests2
-                     PH.tests2
-                     , PHT.tests2
+                 --    PH.tests2
+                      PHT.tests2
                        ])
