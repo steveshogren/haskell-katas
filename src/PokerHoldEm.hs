@@ -12,15 +12,23 @@ overCardCount flop hand =
   in foldl (\count card -> if elem card hands then count + 1 else count) 0
      $ take 2 sorted
 
+fourCardsFlush cards =
+  let suits = sortBy (compare) $ map PH.suit cards
+  in take 4 suits
+
 outCount :: [PH.Card] -> [PH.Card] -> Integer
-outCount flop hand =
+outCount flop hand@[c1, c2] =
   let testHand =  hand ++ flop
       overCardCounts = overCardCount flop hand
+      pocketSameValue = PH.face c1 == PH.face c2
+      pocketSameSuit = PH.suit c1 == PH.suit c2
   in
     if isJust (isTwoPair testHand) then 4
-    else if isJust (isTwoOfAKind testHand) then 2
-    else if 1 == (overCardCount flop hand)  then 3
-    else if 2 == (overCardCount flop hand)  then 6
+    else if pocketSameSuit && isJust (isFlush testHand) then 7
+    else if pocketSameValue && isJust (isThreeOfAKind testHand) then 7
+    else if pocketSameValue && isJust (isTwoOfAKind testHand) then 2
+    else if 1 == overCardCounts  then 3
+    else if 2 == overCardCounts  then 6
     else 0
 
 percentage :: [PH.Card] -> [PH.Card] -> Integer
