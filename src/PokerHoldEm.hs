@@ -2,7 +2,8 @@ module PokerHoldEm where
 
 import PokerHands as PH
 import Data.Maybe(isJust)
-import Data.List(sortBy)
+import Data.List(sortBy, any)
+import GHC.Exts(groupWith)
 
 overCardCount :: [PH.Card] -> [PH.Card] -> Integer
 overCardCount flop hand =
@@ -14,7 +15,7 @@ overCardCount flop hand =
 
 fourCardsFlush cards =
   let suits = sortBy (compare) $ map PH.suit cards
-  in take 4 suits
+  in any (\cards -> length cards == 4) $ groupWith id suits
 
 outCount :: [PH.Card] -> [PH.Card] -> Integer
 outCount flop hand@[c1, c2] =
