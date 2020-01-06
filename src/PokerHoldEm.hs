@@ -13,6 +13,7 @@ overCardCount flop hand =
   in foldl (\count card -> if elem card hands then count + 1 else count) 0
      $ take 2 sorted
 
+fourCardsFlush :: [Card] -> Bool
 fourCardsFlush cards =
   let suits = sortBy (compare) $ map PH.suit cards
   in any (\cards -> length cards == 4) $ groupWith id suits
@@ -25,7 +26,7 @@ outCount flop hand@[c1, c2] =
       pocketSameSuit = PH.suit c1 == PH.suit c2
   in
     if isJust (isTwoPair testHand) then 4
-    else if pocketSameSuit && isJust (isFlush testHand) then 7
+    else if pocketSameSuit && (fourCardsFlush testHand) then 9
     else if pocketSameValue && isJust (isThreeOfAKind testHand) then 7
     else if pocketSameValue && isJust (isTwoOfAKind testHand) then 2
     else if 1 == overCardCounts  then 3

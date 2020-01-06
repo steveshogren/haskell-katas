@@ -55,6 +55,12 @@ testSetToFullHouseFourKind =
        hand = fromMaybe [] (parseHand "QH QS")
    in (assertEqual "set to full house / four kind" 7 (PHE.outCount flop hand))
 
+testOpenEndedStraightDraw :: Assertion
+testOpenEndedStraightDraw =
+   let flop = fromMaybe [] (parseHand "4S 5D 6S")
+       hand = fromMaybe [] (parseHand "7D 8D")
+   in (assertEqual "open ended straight draw" 8 (PHE.outCount flop hand))
+
 testFlushDraw :: Assertion
 testFlushDraw =
    let flop = fromMaybe [] (parseHand "QD 2D 9S")
@@ -69,14 +75,17 @@ testFourCardsFlush =
 tests2 :: TestTree
 tests2 = testGroup "PokerHandsTests"
   [
-      testCase "pocket pair" testOutCounterPocketPair
+      testCase "pocket pair to set" testOutCounterPocketPair
       , testCase "one overcard" testOutCounterOneOvercard
       , testCase "two pair to full house" testOutCounterTwoPairToFullHouse
-      , testCase "two overcards" testOutCounterTwoOvercard
+      , testCase "two overcards to overpair" testOutCounterTwoOvercard
+      , testCase "set to full house / four kind" testSetToFullHouseFourKind
+      , testCase "open ended straight draw" testOpenEndedStraightDraw
+      , testCase "flush draw" testFlushDraw
+
+      -- helpers
       , testCase "1 overcard count" testOverCardCount
       , testCase "2 overcard count" testTwoOverCardCount
-      , testCase "set to full house / four kind" testSetToFullHouseFourKind
-      , testCase "flush draw" testFlushDraw
       , testCase "four cards flush" testFourCardsFlush
   ]
 
