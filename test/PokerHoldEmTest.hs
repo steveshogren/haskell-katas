@@ -28,7 +28,7 @@ testOutCounterPocketPair =
        pocketHand = fromMaybe [] (parseHand "4D 4H")
        nonPocketHand = fromMaybe [] (parseHand "3D 2H")
    in (assertEqual "pocket pair" 2 (PHE.outCount flop pocketHand))
-      >> (assertEqual "no pocket pair" 0 (PHE.outCount flop nonPocketHand))
+      >> (assertEqual "no pocket pair still counts" 2 (PHE.outCount flop nonPocketHand))
 
 testOutCounterOneOvercard :: Assertion
 testOutCounterOneOvercard =
@@ -57,9 +57,12 @@ testSetToFullHouseFourKind =
 
 testOpenEndedStraightDraw :: Assertion
 testOpenEndedStraightDraw =
-   let flop = fromMaybe [] (parseHand "4S 5D 6S")
+   let flop = fromMaybe [] (parseHand "2S 5D 6S")
        hand = fromMaybe [] (parseHand "7D 8D")
-   in (assertEqual "open ended straight draw" 8 (PHE.outCount flop hand))
+       flop1 = fromMaybe [] (parseHand "4S 5D 6S")
+       hand1 = fromMaybe [] (parseHand "QD 7D")
+   in (assertEqual "is open straight " 8 (PHE.outCount flop hand))
+      >> (assertEqual "doesn't have to use both hand cards" 8 (PHE.outCount flop1 hand1))
 
 testFlushDraw :: Assertion
 testFlushDraw =
