@@ -70,6 +70,12 @@ testFlushDraw =
        hand = fromMaybe [] (parseHand "4D 8D")
    in (assertEqual "flush draw" 9 (PHE.outCount flop hand))
 
+testOpenEndedStraightFlushDraw :: Assertion
+testOpenEndedStraightFlushDraw =
+   let flop = fromMaybe [] (parseHand "10H 3H JS")
+       hand = fromMaybe [] (parseHand "QD KD")
+   in (assertEqual "is open ended straight flush draw" 15 (PHE.outCount flop hand))
+
 testFourCardsFlush :: Assertion
 testFourCardsFlush =
    let cards = fromMaybe [] (parseHand "QD 2D 9S 5D 7D")

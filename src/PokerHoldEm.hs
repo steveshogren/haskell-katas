@@ -31,6 +31,7 @@ outCount flop hand@[c1, c2] =
       overCardCounts = overCardCount flop hand
   in
     if isJust (isTwoPair testHand) then 4
+    else if fourCardsFlush testHand && isOpenStraight testHand then 15
     else if fourCardsFlush testHand then 9
     else if fourCardsFlush testHand then 9
     else if isOpenStraight testHand then 8
