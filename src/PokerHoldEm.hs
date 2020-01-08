@@ -1,9 +1,10 @@
 module PokerHoldEm where
 
 import PokerHands as PH
-import Data.Maybe(isJust)
+import Data.Maybe(isJust, fromMaybe)
 import Data.List(sortBy, any)
 import GHC.Exts(groupWith)
+import Debug.Trace(trace)
 
 overCardCount :: [PH.Card] -> [PH.Card] -> Integer
 overCardCount flop hand =
@@ -25,6 +26,25 @@ isOpenStraight cards =
       second4 = isJust $ isStraight $ take 4 $ drop 1 sorted
   in first4 || second4
 
+cards1 = fromMaybe [] (parseHand "4S 8D 10D JS QC")
+isInsideStraight :: [Card] -> Bool
+isInsideStraight cards =
+  let sorted = sortBy (compare) $ map (fromEnum . PH.face) cards
+      first4 = take 4 sorted
+      second4 = take 4 $ drop 1 sorted
+  in any (\cs@[c1,c2,c3,c4] ->
+            if (c1 + 2 == c2 && enumFromTo c2 c4 == [c2,c3,c4]) then
+
+              True
+            else if ((enumFromTo c1 c2) == [c1,c2] && c2+2 == c3 && (enumFromTo c3 c4) == [c3,c4]) then
+
+              True
+            else if ((trace (show $ enumFromTo c1 c3) $ enumFromTo c1 c3) == [c1,c2,c3] && c3+2 == c4) then
+              True
+            else False
+         )
+     [first4, second4]
+
 outCount :: [PH.Card] -> [PH.Card] -> Integer
 outCount flop hand@[c1, c2] =
   let testHand =  hand ++ flop
@@ -32,7 +52,6 @@ outCount flop hand@[c1, c2] =
   in
     if isJust (isTwoPair testHand) then 4
     else if fourCardsFlush testHand && isOpenStraight testHand then 15
-    else if fourCardsFlush testHand then 9
     else if fourCardsFlush testHand then 9
     else if isOpenStraight testHand then 8
     else if isJust (isThreeOfAKind testHand) then 7
