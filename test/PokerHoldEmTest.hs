@@ -87,6 +87,12 @@ testInsideStraightDraw =
        hand = fromMaybe [] (parseHand "JS 10D")
    in (assertEqual "inside straight draw" 4 (PHE.outCount flop hand))
 
+testInsideStraightFlushDraw :: Assertion
+testInsideStraightFlushDraw =
+   let flop = fromMaybe [] (parseHand "QD 8D 4S")
+       hand = fromMaybe [] (parseHand "JD 10D")
+   in (assertEqual "inside straight flush draw" 12 (PHE.outCount flop hand))
+
 testIsInsideStraight :: Assertion
 testIsInsideStraight =
    let cards1 = fromMaybe [] (parseHand "4S 8D 10D JS QC")
@@ -108,7 +114,8 @@ tests2 = testGroup "PokerHandsTests"
       , testCase "set to full house / four kind" testSetToFullHouseFourKind
       , testCase "open ended straight draw" testOpenEndedStraightDraw
       , testCase "flush draw" testFlushDraw
-      --, testCase "inside straight draw" testInsideStraightDraw
+      , testCase "inside straight draw" testInsideStraightDraw
+      , testCase "inside straight and flush draw" testInsideStraightFlushDraw
 
       -- helpers
       , testCase "is inside straigh" testIsInsideStraight

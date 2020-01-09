@@ -26,7 +26,6 @@ isOpenStraight cards =
       second4 = isJust $ isStraight $ take 4 $ drop 1 sorted
   in first4 || second4
 
-cards1 = fromMaybe [] (parseHand "4S 8D 10D JS QC")
 isInsideStraight :: [Card] -> Bool
 isInsideStraight cards =
   let sorted = sortBy (compare) $ map (fromEnum . PH.face) cards
@@ -51,6 +50,8 @@ outCount flop hand@[c1, c2] =
       overCardCounts = overCardCount flop hand
   in
     if isJust (isTwoPair testHand) then 4
+    else if fourCardsFlush testHand && isInsideStraight testHand then 12
+    else if isInsideStraight testHand then 4
     else if fourCardsFlush testHand && isOpenStraight testHand then 15
     else if fourCardsFlush testHand then 9
     else if isOpenStraight testHand then 8
