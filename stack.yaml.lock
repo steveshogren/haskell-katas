@@ -18,6 +18,13 @@ packages:
       sha256: 7209dad32396324c4153e313d57dbe12fb5d5b96b607140ebf9eace2e5734c96
   original:
     hackage: cabal-helper-0.6.0.0
+- completed:
+    hackage: combinatorial-0.1.0.1@sha256:4ab1fdc8650807305af0070f423db3eab664fbde3dbbc61f5f608bd7343f317e,2575
+    pantry-tree:
+      size: 1237
+      sha256: af261ef20856b6efd6d3dae90ee3fb25fd5aa58e310f0957625f753cbf220dfb
+  original:
+    hackage: combinatorial-0.1.0.1
 snapshots:
 - completed:
     size: 567338

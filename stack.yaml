@@ -4,5 +4,6 @@ packages:
 extra-deps: [
              'gasp-1.0.1.0'
             , 'cabal-helper-0.6.0.0'
+            , 'combinatorial-0.1.0.1'
 ]
 resolver: lts-10.2

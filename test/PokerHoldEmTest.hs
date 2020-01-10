@@ -104,6 +104,13 @@ testIsInsideStraight =
       >> (assertEqual "card 4 missing" True (PHE.isInsideStraight cards3))
       >> (assertEqual "isnt inside straight" False (PHE.isInsideStraight cards4))
 
+testHandPermutations :: Assertion
+testHandPermutations =
+   let cards = fromMaybe [] (parseHand "2D 3D 4D 5D 6D 7D 8D")
+   in (assertEqual "all permutations"
+       [[6,7,8,9,10],[6,7,8,9,11],[6,7,8,9,12],[6,7,8,10,11],[6,7,8,10,12],[6,7,8,11,12],[6,7,9,10,11],[6,7,9,10,12],[6,7,9,11,12],[6,7,10,11,12],[6,8,9,10,11],[6,8,9,10,12],[6,8,9,11,12],[6,8,10,11,12],[6,9,10,11,12],[7,8,9,10,11],[7,8,9,10,12],[7,8,9,11,12],[7,8,10,11,12],[7,9,10,11,12],[8,9,10,11,12]]
+       (map (\hand -> map (fromEnum . face) hand) $ PHE.possibleHands cards))
+
 tests2 :: TestTree
 tests2 = testGroup "PokerHandsTests"
   [
@@ -122,6 +129,8 @@ tests2 = testGroup "PokerHandsTests"
       , testCase "1 overcard count" testOverCardCount
       , testCase "2 overcard count" testTwoOverCardCount
       , testCase "four cards flush" testFourCardsFlush
+
+      , testCase "permutations" testHandPermutations
   ]
 
 runner = defaultMain tests2

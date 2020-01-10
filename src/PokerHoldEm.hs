@@ -5,6 +5,8 @@ import Data.Maybe(isJust, fromMaybe)
 import Data.List(sortBy, any)
 import GHC.Exts(groupWith)
 import Debug.Trace(trace)
+import Combinatorics(variate)
+import Data.Set(toList, fromList)
 
 overCardCount :: [PH.Card] -> [PH.Card] -> Integer
 overCardCount flop hand =
@@ -63,3 +65,7 @@ outCount flop hand@[c1, c2] =
 
 percentage :: [PH.Card] -> [PH.Card] -> Integer
 percentage flop hand = 100
+
+possibleHands cards =
+  toList $ fromList $ map (\x -> sortBy (compare) x) $ variate 5 cards
+
