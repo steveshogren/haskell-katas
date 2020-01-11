@@ -69,3 +69,5 @@ percentage flop hand = 100
 possibleHands cards =
   toList $ fromList $ map (\x -> sortBy (compare) x) $ variate 5 cards
 
+bestHand cards =
+  Nothing

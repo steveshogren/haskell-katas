@@ -111,6 +111,13 @@ testHandPermutations =
        [[6,7,8,9,10],[6,7,8,9,11],[6,7,8,9,12],[6,7,8,10,11],[6,7,8,10,12],[6,7,8,11,12],[6,7,9,10,11],[6,7,9,10,12],[6,7,9,11,12],[6,7,10,11,12],[6,8,9,10,11],[6,8,9,10,12],[6,8,9,11,12],[6,8,10,11,12],[6,9,10,11,12],[7,8,9,10,11],[7,8,9,10,12],[7,8,9,11,12],[7,8,10,11,12],[7,9,10,11,12],[8,9,10,11,12]]
        (map (\hand -> map (fromEnum . face) hand) $ PHE.possibleHands cards))
 
+testCurrentHand :: Assertion
+testCurrentHand =
+   let cards = fromMaybe [] (parseHand "2D 2D QD QD 6D 7D 8D")
+   in (assertEqual "detect current hand"
+      (Just $ TwoPair (Queen, Two))
+      (PHE.bestHand cards))
+
 tests2 :: TestTree
 tests2 = testGroup "PokerHandsTests"
   [
@@ -124,13 +131,15 @@ tests2 = testGroup "PokerHandsTests"
       , testCase "inside straight draw" testInsideStraightDraw
       , testCase "inside straight and flush draw" testInsideStraightFlushDraw
 
-      -- helpers
+        -- helpers
       , testCase "is inside straigh" testIsInsideStraight
       , testCase "1 overcard count" testOverCardCount
       , testCase "2 overcard count" testTwoOverCardCount
       , testCase "four cards flush" testFourCardsFlush
 
       , testCase "permutations" testHandPermutations
+
+      , testCase "current hand" testCurrentHand
   ]
 
 runner = defaultMain tests2
