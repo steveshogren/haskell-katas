@@ -113,7 +113,7 @@ testHandPermutations =
 
 testCurrentHand :: Assertion
 testCurrentHand =
-   let cards = fromMaybe [] (parseHand "2D 2D QD QD 6D 7D 8D")
+   let cards = fromMaybe [] (parseHand "2D 2S QD QC 6D 7S 8D")
    in (assertEqual "detect current hand"
       (Just $ TwoPair (Queen, Two))
       (PHE.bestHand cards))

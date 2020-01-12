@@ -1,7 +1,7 @@
 module PokerHoldEm where
 
 import PokerHands as PH
-import Data.Maybe(isJust, fromMaybe)
+import Data.Maybe(isJust, fromMaybe, catMaybes)
 import Data.List(sortBy, any)
 import GHC.Exts(groupWith)
 import Debug.Trace(trace)
@@ -35,12 +35,10 @@ isInsideStraight cards =
       second4 = take 4 $ drop 1 sorted
   in any (\cs@[c1,c2,c3,c4] ->
             if (c1 + 2 == c2 && enumFromTo c2 c4 == [c2,c3,c4]) then
-
               True
             else if ((enumFromTo c1 c2) == [c1,c2] && c2+2 == c3 && (enumFromTo c3 c4) == [c3,c4]) then
-
               True
-            else if ((trace (show $ enumFromTo c1 c3) $ enumFromTo c1 c3) == [c1,c2,c3] && c3+2 == c4) then
+            else if (enumFromTo c1 c3 == [c1,c2,c3] && c3+2 == c4) then
               True
             else False
          )
@@ -69,5 +67,11 @@ percentage flop hand = 100
 possibleHands cards =
   toList $ fromList $ map (\x -> sortBy (compare) x) $ variate 5 cards
 
+bestHand :: [PH.Card] -> Maybe PH.AHand
 bestHand cards =
-  Nothing
+  let handsPermutations = possibleHands cards
+      hands = map (\hand -> PH.detectHand hand Nothing) handsPermutations
+  in
+    return $ head $ sortBy compare $ catMaybes hands
+
+cards = bestHand $ fromMaybe [] (parseHand "2C 3S 4H 8D 7D 7D 8D")

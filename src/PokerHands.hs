@@ -109,7 +109,7 @@ isTwoPair hand = do
 
 isStraight :: Hand -> Maybe AHand
 isStraight hand =
-  let sorted = sortBy (compare) $ map face hand
+  let sorted = sortBy compare $ map face hand
       expected = enumFromTo (head sorted) (head . reverse $ sorted)
   in if sorted == expected then
        Just $ Straight (head sorted)
@@ -117,6 +117,11 @@ isStraight hand =
 
 suit :: Card -> Suit
 suit (Card _ s) = s
+
+isHighCard :: Hand -> Maybe AHand
+isHighCard hand =
+  let card = head $ sortBy compare $ hand
+  in Just $ HighCard $ face card
 
 isFlush :: Hand -> Maybe AHand
 isFlush hand =
@@ -134,7 +139,7 @@ isRoyalFlush hand = do
   else Nothing
 
 isFunctions :: [Hand -> Maybe AHand]
-isFunctions = [isRoyalFlush,isFlush, isStraight,isTwoPair,isThreeOfAKind,isTwoOfAKind,isFullHouse,isFourOfAKind]
+isFunctions = [isRoyalFlush,isFlush, isStraight,isTwoPair,isThreeOfAKind,isTwoOfAKind,isFullHouse,isFourOfAKind, isHighCard]
 
 pristineDeck :: [Card]
 pristineDeck = [Card rank suit | suit <- [Hearts .. Spades], rank <- [Ace .. Two] ]
@@ -167,6 +172,10 @@ deckPermutations Nothing hand =
 convertHand :: String -> Maybe Face -> Maybe AHand
 convertHand str wild = do
   hand <- parseHand str
+  detectHand hand wild
+
+detectHand :: [Card] -> Maybe Face -> Maybe AHand
+detectHand hand wild = do
   let hands = deckPermutations wild hand
   return $ head $ sortBy compare $ catMaybes [f hand | hand <- hands, f <- isFunctions]
 
