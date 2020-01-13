@@ -67,11 +67,15 @@ percentage flop hand = 100
 possibleHands cards =
   toList $ fromList $ map (\x -> sortBy (compare) x) $ variate 5 cards
 
-bestHand :: [PH.Card] -> Maybe PH.AHand
+bestHand :: [PH.Card] -> PH.AHand
 bestHand cards =
   let handsPermutations = possibleHands cards
       hands = map (\hand -> PH.detectHand hand Nothing) handsPermutations
   in
-    return $ head $ sortBy compare $ catMaybes hands
+    head $ sortBy compare $ catMaybes hands
 
-cards = bestHand $ fromMaybe [] (parseHand "2C 3S 4H 8D 7D 7D 8D")
+winner :: [PH.Card] -> [PH.Card] -> [PH.Card] -> Either PH.AHand PH.AHand
+winner p1 p2 table =
+  let left = bestHand (p1 ++ table)
+      right = bestHand (p2 ++ table)
+  in if left < right then Left left else Right right

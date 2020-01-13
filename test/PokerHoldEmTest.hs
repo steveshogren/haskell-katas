@@ -115,8 +115,17 @@ testCurrentHand :: Assertion
 testCurrentHand =
    let cards = fromMaybe [] (parseHand "2D 2S QD QC 6D 7S 8D")
    in (assertEqual "detect current hand"
-      (Just $ TwoPair (Queen, Two))
+      (TwoPair (Queen, Two))
       (PHE.bestHand cards))
+
+testWinner :: Assertion
+testWinner =
+   let cards = fromMaybe [] (parseHand "QD 2C 6D 7S 8D")
+       p1 = fromMaybe [] (parseHand "QD 2S")
+       p2 = fromMaybe [] (parseHand "2D 3S")
+   in (assertEqual "winner"
+      (Left $ TwoPair (Queen, Two))
+      (PHE.winner p1 p2 cards))
 
 tests2 :: TestTree
 tests2 = testGroup "PokerHandsTests"
@@ -140,6 +149,7 @@ tests2 = testGroup "PokerHandsTests"
       , testCase "permutations" testHandPermutations
 
       , testCase "current hand" testCurrentHand
+      , testCase "winner" testWinner
   ]
 
 runner = defaultMain tests2
