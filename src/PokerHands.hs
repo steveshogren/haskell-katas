@@ -80,7 +80,7 @@ isOfAKind rev size hand t =
       moreThanN = filter (\a -> length a == size) faceGrouped
       reverseFn = if rev then reverse else id
   in if length moreThanN > 0 then
-      let sorted = reverseFn $ sortBy (compare) $ map (face . head) moreThanN
+      let sorted = reverseFn $ sortBy compare $ map (face . head) moreThanN
       in Just $ t (head sorted)
      else Nothing
 

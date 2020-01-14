@@ -12,13 +12,13 @@ overCardCount :: [PH.Card] -> [PH.Card] -> Integer
 overCardCount flop hand =
   let flops = map PH.face flop
       hands = map PH.face hand
-      sorted = sortBy (compare) $ hands ++ flops
+      sorted = sortBy compare $ hands ++ flops
   in foldl (\count card -> if elem card hands then count + 1 else count) 0
      $ take 2 sorted
 
 fourCardsFlush :: [Card] -> Bool
 fourCardsFlush cards =
-  let suits = sortBy (compare) $ map PH.suit cards
+  let suits = sortBy compare $ map PH.suit cards
   in any (\cards -> length cards == 4) $ groupWith id suits
 
 isOpenStraight :: [Card] -> Bool
@@ -30,7 +30,7 @@ isOpenStraight cards =
 
 isInsideStraight :: [Card] -> Bool
 isInsideStraight cards =
-  let sorted = sortBy (compare) $ map (fromEnum . PH.face) cards
+  let sorted = sortBy compare $ map (fromEnum . PH.face) cards
       first4 = take 4 sorted
       second4 = take 4 $ drop 1 sorted
   in any (\cs@[c1,c2,c3,c4] ->
@@ -65,7 +65,7 @@ percentage :: [PH.Card] -> [PH.Card] -> Integer
 percentage flop hand = 100
 
 possibleHands cards =
-  toList $ fromList $ map (\x -> sortBy (compare) x) $ variate 5 cards
+  toList $ fromList $ map (\x -> sortBy compare x) $ variate 5 cards
 
 bestHand :: [PH.Card] -> PH.AHand
 bestHand cards =
