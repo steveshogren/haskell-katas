@@ -79,3 +79,11 @@ winner p1 p2 table =
   let left = bestHand (p1 ++ table)
       right = bestHand (p2 ++ table)
   in if left < right then Left left else Right right
+
+rounder :: (Fractional a2, RealFrac a1, Integral b) => a1 -> b -> a2
+rounder f n =
+  (fromInteger $ round $ f * (10^n)) / (10.0^^n)
+
+oddsFlopToTurn :: Integer -> Double
+oddsFlopToTurn outs =
+  rounder (100*  ((fromIntegral outs)/46.0) ) 1

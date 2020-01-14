@@ -127,6 +127,11 @@ testWinner =
       (Left $ TwoPair (Queen, Two))
       (PHE.winner p1 p2 cards))
 
+testOddsFlopToTurn :: Assertion
+testOddsFlopToTurn =
+   (assertEqual "1" 2.2 (PHE.oddsFlopToTurn 1))
+   >> (assertEqual "20" 43.5 (PHE.oddsFlopToTurn 20))
+
 tests2 :: TestTree
 tests2 = testGroup "PokerHandsTests"
   [
@@ -150,6 +155,8 @@ tests2 = testGroup "PokerHandsTests"
 
       , testCase "current hand" testCurrentHand
       , testCase "winner" testWinner
+
+      , testCase "oddsToTurn" testOddsFlopToTurn
   ]
 
 runner = defaultMain tests2
