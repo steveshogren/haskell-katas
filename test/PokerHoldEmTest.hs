@@ -27,54 +27,69 @@ testOutCounterPocketPair =
    let flop = fromMaybe [] (parseHand "QD 2H 9S")
        pocketHand = fromMaybe [] (parseHand "4D 4H")
        nonPocketHand = fromMaybe [] (parseHand "3D 2H")
-   in (assertEqual "pocket pair" 2 (PHE.outCount flop pocketHand))
-      >> (assertEqual "no pocket pair still counts" 2 (PHE.outCount flop nonPocketHand))
+   in (assertEqual "pocket pair" [(2, ThreeOfAKind Four)] (PHE.outCount flop pocketHand))
+      >> (assertEqual "no pocket pair still counts" [(2, ThreeOfAKind Two)] (PHE.outCount flop nonPocketHand))
 
 testOutCounterOneOvercard :: Assertion
 testOutCounterOneOvercard =
    let flop = fromMaybe [] (parseHand "5D 8H 9S")
        hand = fromMaybe [] (parseHand "QH 2H")
-   in (assertEqual "one overcard" 3 (PHE.outCount flop hand))
+   in (assertEqual "one overcard" [(3, TwoOfAKind Queen)] (PHE.outCount flop hand))
 
 testOutCounterTwoOvercard :: Assertion
 testOutCounterTwoOvercard =
    let flop = fromMaybe [] (parseHand "5D 8H 2S")
        hand = fromMaybe [] (parseHand "QH 9H")
-   in (assertEqual "two overcard" 6 (PHE.outCount flop hand))
+   in (assertEqual "two overcard"
+       [(3,TwoOfAKind Queen), (3,TwoOfAKind Nine)]
+       (PHE.outCount flop hand))
 
 testOutCounterTwoPairToFullHouse :: Assertion
 testOutCounterTwoPairToFullHouse =
    let flop = fromMaybe [] (parseHand "QD 2H 9S")
        hand = fromMaybe [] (parseHand "QH 9H")
-   in (assertEqual "two pair to full" 4 (PHE.outCount flop hand))
+   in (assertEqual "two pair to full"
+       [(2, FullHouse Queen Nine), (2, FullHouse Nine Queen)]
+       (PHE.outCount flop hand))
 
 
 testSetToFullHouseFourKind :: Assertion
 testSetToFullHouseFourKind =
    let flop = fromMaybe [] (parseHand "QD 2H 9S")
        hand = fromMaybe [] (parseHand "QH QS")
-   in (assertEqual "set to full house / four kind" 7 (PHE.outCount flop hand))
+   in (assertEqual "set to full house / four kind"
+       [(1, FourOfAKind Queen),
+        (3, FullHouse Queen Nine),
+        (3, FullHouse Queen Two)]
+       (PHE.outCount flop hand))
 
 testOpenEndedStraightDraw :: Assertion
 testOpenEndedStraightDraw =
    let flop = fromMaybe [] (parseHand "2S 5D 6S")
        hand = fromMaybe [] (parseHand "7D 8D")
-       flop1 = fromMaybe [] (parseHand "4S 5D 6S")
-       hand1 = fromMaybe [] (parseHand "QD 7D")
-   in (assertEqual "is open straight " 8 (PHE.outCount flop hand))
-      >> (assertEqual "doesn't have to use both hand cards" 8 (PHE.outCount flop1 hand1))
+   in (assertEqual "is open straight "
+      [(4, Straight Eight),
+       (4, Straight Nine)]
+       (PHE.outCount flop hand))
 
 testFlushDraw :: Assertion
 testFlushDraw =
    let flop = fromMaybe [] (parseHand "QD 2D 9S")
        hand = fromMaybe [] (parseHand "4D 8D")
-   in (assertEqual "flush draw" 9 (PHE.outCount flop hand))
+   in (assertEqual "flush draw"
+       [(9, Flush Diamonds)]
+       (PHE.outCount flop hand))
 
 testOpenEndedStraightFlushDraw :: Assertion
 testOpenEndedStraightFlushDraw =
    let flop = fromMaybe [] (parseHand "10H 3H JS")
-       hand = fromMaybe [] (parseHand "QD KD")
-   in (assertEqual "is open ended straight flush draw" 15 (PHE.outCount flop hand))
+       hand = fromMaybe [] (parseHand "QH 9H")
+   in (assertEqual "is open ended straight flush draw"
+       [(9, Flush Hearts),
+        -- already counting the outs for the QH and KH in the 9 hearts
+        (3, Straight Queen),
+        (3, Straight King)]
+       (PHE.outCount flop hand))
 
 testFourCardsFlush :: Assertion
 testFourCardsFlush =
@@ -85,13 +100,18 @@ testInsideStraightDraw :: Assertion
 testInsideStraightDraw =
    let flop = fromMaybe [] (parseHand "QC 8D 4S")
        hand = fromMaybe [] (parseHand "JS 10D")
-   in (assertEqual "inside straight draw" 4 (PHE.outCount flop hand))
+   in (assertEqual "inside straight draw"
+       [(4, Straight Queen)]
+       (PHE.outCount flop hand))
 
 testInsideStraightFlushDraw :: Assertion
 testInsideStraightFlushDraw =
    let flop = fromMaybe [] (parseHand "QD 8D 4S")
        hand = fromMaybe [] (parseHand "JD 10D")
-   in (assertEqual "inside straight flush draw" 12 (PHE.outCount flop hand))
+   in (assertEqual "inside straight flush draw"
+       [(4, Straight Queen),
+        (8, Flush Diamonds)]
+       (PHE.outCount flop hand))
 
 testIsInsideStraight :: Assertion
 testIsInsideStraight =
@@ -157,6 +177,7 @@ tests2 = testGroup "PokerHandsTests"
       , testCase "winner" testWinner
 
       , testCase "oddsToTurn" testOddsFlopToTurn
+
   ]
 
 runner = defaultMain tests2

@@ -44,7 +44,7 @@ isInsideStraight cards =
          )
      [first4, second4]
 
-outCount :: [PH.Card] -> [PH.Card] -> Integer
+outCount :: [PH.Card] -> [PH.Card] -> [(Integer, AHand)]
 outCount flop hand@[c1, c2] =
   let testHand =  hand ++ flop
       overCardCounts = overCardCount flop hand
