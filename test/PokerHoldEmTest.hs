@@ -49,9 +49,8 @@ testOutCounterTwoPairToFullHouse =
    let flop = fromMaybe [] (parseHand "QD 2H 9S")
        hand = fromMaybe [] (parseHand "QH 9H")
    in (assertEqual "two pair to full"
-       [(2, FullHouse Queen Nine), (2, FullHouse Nine Queen)]
+       [(2, FullHouse (Queen, Nine)), (2, FullHouse (Nine, Queen))]
        (PHE.outCount flop hand))
-
 
 testSetToFullHouseFourKind :: Assertion
 testSetToFullHouseFourKind =
@@ -59,8 +58,8 @@ testSetToFullHouseFourKind =
        hand = fromMaybe [] (parseHand "QH QS")
    in (assertEqual "set to full house / four kind"
        [(1, FourOfAKind Queen),
-        (3, FullHouse Queen Nine),
-        (3, FullHouse Queen Two)]
+        (3, FullHouse (Queen, Nine)),
+        (3, FullHouse (Queen, Two ))]
        (PHE.outCount flop hand))
 
 testOpenEndedStraightDraw :: Assertion
@@ -152,6 +151,11 @@ testOddsFlopToTurn =
    (assertEqual "1" 2.2 (PHE.oddsFlopToTurn 1))
    >> (assertEqual "20" 43.5 (PHE.oddsFlopToTurn 20))
 
+testHighestCard :: Assertion
+testHighestCard =
+   let cards = fromMaybe [] (parseHand "2C QS 2C 6D 7S 8D")
+   in (assertEqual "highest card" (Card Queen Spades) (PHE.highestCard cards))
+
 tests2 :: TestTree
 tests2 = testGroup "PokerHandsTests"
   [
@@ -177,6 +181,8 @@ tests2 = testGroup "PokerHandsTests"
       , testCase "winner" testWinner
 
       , testCase "oddsToTurn" testOddsFlopToTurn
+
+      , testCase "highestCards" testHighestCard
 
   ]
 

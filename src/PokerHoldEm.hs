@@ -8,6 +8,10 @@ import Debug.Trace(trace)
 import Combinatorics(variate)
 import Data.Set(toList, fromList)
 
+
+highestCard :: [PH.Card] -> PH.Card
+highestCard cards = head $ sortBy compare cards
+
 overCardCount :: [PH.Card] -> [PH.Card] -> Integer
 overCardCount flop hand =
   let flops = map PH.face flop
@@ -47,19 +51,31 @@ isInsideStraight cards =
 outCount :: [PH.Card] -> [PH.Card] -> [(Integer, AHand)]
 outCount flop hand@[c1, c2] =
   let testHand =  hand ++ flop
+      sortedHandCards =  sortBy compare hand
       overCardCounts = overCardCount flop hand
-  in
-    if isJust (isTwoPair testHand) then 4
-    else if fourCardsFlush testHand && isInsideStraight testHand then 12
-    else if isInsideStraight testHand then 4
-    else if fourCardsFlush testHand && isOpenStraight testHand then 15
-    else if fourCardsFlush testHand then 9
-    else if isOpenStraight testHand then 8
-    else if isJust (isThreeOfAKind testHand) then 7
-    else if isJust (isTwoOfAKind testHand) then 2
-    else if 1 == overCardCounts  then 3
-    else if 2 == overCardCounts  then 6
-    else 0
+      pair = (isTwoOfAKind testHand)
+  in if isJust (isTwoPair testHand) then [(4, HighCard Two)]
+  else if fourCardsFlush testHand && isInsideStraight testHand then
+    [(12, HighCard Two)]
+  else if isInsideStraight testHand then
+    [(4, HighCard Two)]
+  else if fourCardsFlush testHand && isOpenStraight testHand then
+    [(15, HighCard Two)]
+  else if fourCardsFlush testHand then
+    [(9, HighCard Two)]
+  else if isOpenStraight testHand then
+    [(8, HighCard Two)]
+  else if isJust (isThreeOfAKind testHand) then
+    [(7, HighCard Two)]
+  else if isJust pair then
+        let TwoOfAKind face = fromMaybe (HighCard Two) pair
+        in [(2, ThreeOfAKind face)]
+  else if 1 == overCardCounts  then
+    [(3, TwoOfAKind $ face $ head sortedHandCards)]
+  else if 2 == overCardCounts  then
+    [(3, TwoOfAKind $ face $ head sortedHandCards),
+     (3, TwoOfAKind $ face $ head $ drop 1 sortedHandCards)]
+  else [(0,HighCard Two)]
 
 percentage :: [PH.Card] -> [PH.Card] -> Integer
 percentage flop hand = 100
