@@ -93,7 +93,7 @@ testOpenEndedStraightFlushDraw =
 testFourCardsFlush :: Assertion
 testFourCardsFlush =
    let cards = fromMaybe [] (parseHand "QD 2D 9S 5D 7D")
-   in (assertEqual "four cards flush" True (PHE.fourCardsFlush cards))
+   in (assertEqual "four cards flush" (Just Diamonds) (PHE.fourCardsFlush cards))
 
 testInsideStraightDraw :: Assertion
 testInsideStraightDraw =
@@ -168,6 +168,7 @@ tests2 = testGroup "PokerHandsTests"
       , testCase "flush draw" testFlushDraw
       , testCase "inside straight draw" testInsideStraightDraw
       , testCase "inside straight and flush draw" testInsideStraightFlushDraw
+      , testCase "open straight and flush draw" testOpenEndedStraightFlushDraw
 
         -- helpers
       , testCase "is inside straigh" testIsInsideStraight

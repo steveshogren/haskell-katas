@@ -2,7 +2,7 @@ module PokerHoldEm where
 
 import PokerHands as PH
 import Data.Maybe(isJust, fromMaybe, catMaybes)
-import Data.List(sortBy, any)
+import Data.List(sortBy, any, find)
 import GHC.Exts(groupWith)
 import Debug.Trace(trace)
 import Combinatorics(variate)
@@ -20,17 +20,19 @@ overCardCount flop hand =
   in foldl (\count card -> if elem card hands then count + 1 else count) 0
      $ take 2 sorted
 
-fourCardsFlush :: [Card] -> Bool
+fourCardsFlush :: [Card] -> Maybe Suit
 fourCardsFlush cards =
   let suits = sortBy compare $ map PH.suit cards
-  in any (\cards -> length cards == 4) $ groupWith id suits
+      groups = groupWith id suits
+      found = find (\cards -> length cards == 4) groups
+  in head <$> found
 
-isOpenStraight :: [Card] -> Bool
+isOpenStraight :: [Card] -> [Face]
 isOpenStraight cards =
   let sorted = sortBy (\x y -> compare (PH.face x) (PH.face y)) cards
-      first4 = isJust $ isStraight $ take 4 sorted
-      second4 = isJust $ isStraight $ take 4 $ drop 1 sorted
-  in first4 || second4
+      first4 = isStraight $ take 4 sorted
+      second4 = isStraight $ take 4 $ drop 1 sorted
+  in concatMap (\(Straight face) -> [face, pred face]) $ catMaybes [first4, second4]
 
 isInsideStraight :: [Card] -> Bool
 isInsideStraight cards =
@@ -54,22 +56,28 @@ outCount flop hand@[c1, c2] =
       sortedHandCards =  sortBy compare hand
       overCardCounts = overCardCount flop hand
       pair = (isTwoOfAKind testHand)
+      flush = (fourCardsFlush testHand)
+      openStraight = isOpenStraight testHand
   in if isJust (isTwoPair testHand) then [(4, HighCard Two)]
-  else if fourCardsFlush testHand && isInsideStraight testHand then
-    [(12, HighCard Two)]
+  else if isJust flush  && isInsideStraight testHand then
+    let (Just suit) = flush
+    in [(4, Straight Two), (8, Flush suit)]
   else if isInsideStraight testHand then
-    [(4, HighCard Two)]
-  else if fourCardsFlush testHand && isOpenStraight testHand then
-    [(15, HighCard Two)]
-  else if fourCardsFlush testHand then
-    [(9, HighCard Two)]
-  else if isOpenStraight testHand then
-    [(8, HighCard Two)]
+    [(4, Straight Two)]
+  else if isJust flush && length openStraight > 0 then
+    let (Just suit) = flush
+        [face1, face2] = trace ("open straight" ++ show openStraight) openStraight
+    in [(9, Flush suit), (3, Straight face1), (3, Straight face2)]
+  else if isJust flush then
+    let (Just suit) = flush
+    in [(9, Flush suit)]
+  else if length openStraight > 0 then
+    [(4, Straight Two), (4, Straight Two)]
   else if isJust (isThreeOfAKind testHand) then
     [(7, HighCard Two)]
   else if isJust pair then
-        let TwoOfAKind face = fromMaybe (HighCard Two) pair
-        in [(2, ThreeOfAKind face)]
+    let TwoOfAKind face = fromMaybe (HighCard Two) pair
+    in [(2, ThreeOfAKind face)]
   else if 1 == overCardCounts  then
     [(3, TwoOfAKind $ face $ head sortedHandCards)]
   else if 2 == overCardCounts  then
