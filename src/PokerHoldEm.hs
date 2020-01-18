@@ -34,19 +34,19 @@ isOpenStraight cards =
       second4 = isStraight $ take 4 $ drop 1 sorted
   in concatMap (\(Straight face) -> [face, pred face]) $ catMaybes [first4, second4]
 
-isInsideStraight :: [Card] -> Bool
+isInsideStraight :: [Card] -> [Face]
 isInsideStraight cards =
-  let sorted = sortBy compare $ map (fromEnum . PH.face) cards
+  let sorted = sortBy compare $ map (\c ->  ((fromEnum . PH.face) c, PH.face c)) cards
       first4 = take 4 sorted
       second4 = take 4 $ drop 1 sorted
-  in any (\cs@[c1,c2,c3,c4] ->
+  in catMaybes $ map (\cs@[(c1,highCard),(c2,_),(c3,_),(c4,_)] ->
             if (c1 + 2 == c2 && enumFromTo c2 c4 == [c2,c3,c4]) then
-              True
+              Just highCard
             else if ((enumFromTo c1 c2) == [c1,c2] && c2+2 == c3 && (enumFromTo c3 c4) == [c3,c4]) then
-              True
+              Just highCard
             else if (enumFromTo c1 c3 == [c1,c2,c3] && c3+2 == c4) then
-              True
-            else False
+              Just highCard
+            else Nothing
          )
      [first4, second4]
 
@@ -58,21 +58,23 @@ outCount flop hand@[c1, c2] =
       pair = (isTwoOfAKind testHand)
       flush = (fourCardsFlush testHand)
       openStraight = isOpenStraight testHand
+      insideStraight = isInsideStraight testHand
   in if isJust (isTwoPair testHand) then [(4, HighCard Two)]
-  else if isJust flush  && isInsideStraight testHand then
+  else if isJust flush  && length insideStraight > 0 then
     let (Just suit) = flush
-    in [(4, Straight Two), (8, Flush suit)]
-  else if isInsideStraight testHand then
-    [(4, Straight Two)]
+    in [(4, Straight (head insideStraight)), (8, Flush suit)]
+  else if length insideStraight > 0 then
+    [(4, Straight (head insideStraight))]
   else if isJust flush && length openStraight > 0 then
     let (Just suit) = flush
-        [face1, face2] = trace ("open straight" ++ show openStraight) openStraight
+        [face1, face2] = openStraight
     in [(9, Flush suit), (3, Straight face1), (3, Straight face2)]
   else if isJust flush then
     let (Just suit) = flush
     in [(9, Flush suit)]
   else if length openStraight > 0 then
-    [(4, Straight Two), (4, Straight Two)]
+    let [face1, face2] = openStraight
+    in [(4, Straight face1), (4, Straight face2)]
   else if isJust (isThreeOfAKind testHand) then
     [(7, HighCard Two)]
   else if isJust pair then

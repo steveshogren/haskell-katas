@@ -118,10 +118,10 @@ testIsInsideStraight =
        cards2 = fromMaybe [] (parseHand "4S 8D 9D JS QC")
        cards3 = fromMaybe [] (parseHand "4S 8D 9D 10S QC")
        cards4 = fromMaybe [] (parseHand "4S 4D 9D 10S QC")
-   in (assertEqual "card 2 missing" True (PHE.isInsideStraight cards1))
-      >> (assertEqual "card 3 missing" True (PHE.isInsideStraight cards2))
-      >> (assertEqual "card 4 missing" True (PHE.isInsideStraight cards3))
-      >> (assertEqual "isnt inside straight" False (PHE.isInsideStraight cards4))
+   in (assertEqual "card 2 missing" [Queen] (PHE.isInsideStraight cards1))
+      >> (assertEqual "card 3 missing" [Queen] (PHE.isInsideStraight cards2))
+      >> (assertEqual "card 4 missing" [Queen] (PHE.isInsideStraight cards3))
+      >> (assertEqual "isnt inside straight" [] (PHE.isInsideStraight cards4))
 
 testHandPermutations :: Assertion
 testHandPermutations =
