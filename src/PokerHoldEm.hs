@@ -55,11 +55,15 @@ outCount flop hand@[c1, c2] =
   let testHand =  hand ++ flop
       sortedHandCards =  sortBy compare hand
       overCardCounts = overCardCount flop hand
-      pair = (isTwoOfAKind testHand)
-      flush = (fourCardsFlush testHand)
+      pair = isTwoOfAKind testHand
+      flush = fourCardsFlush testHand
       openStraight = isOpenStraight testHand
       insideStraight = isInsideStraight testHand
-  in if isJust (isTwoPair testHand) then [(4, HighCard Two)]
+      twoPair = isTwoPair testHand
+      threeKind = isThreeOfAKind testHand
+  in if isJust twoPair then
+    let Just (TwoPair (a, b)) = twoPair
+    in [(2, FullHouse (a,b)), (2, FullHouse (b,a))]
   else if isJust flush  && length insideStraight > 0 then
     let (Just suit) = flush
     in [(4, Straight (head insideStraight)), (8, Flush suit)]
@@ -75,8 +79,12 @@ outCount flop hand@[c1, c2] =
   else if length openStraight > 0 then
     let [face1, face2] = openStraight
     in [(4, Straight face1), (4, Straight face2)]
-  else if isJust (isThreeOfAKind testHand) then
-    [(7, HighCard Two)]
+  else if isJust threeKind then
+    let Just (ThreeOfAKind face) = threeKind
+        [a,b] = sortBy compare $ filter (\c -> c /= face) $ map PH.face testHand
+    in [(1, FourOfAKind face),
+        (3, FullHouse (face, a)),
+        (3, FullHouse (face, b))]
   else if isJust pair then
     let TwoOfAKind face = fromMaybe (HighCard Two) pair
     in [(2, ThreeOfAKind face)]
