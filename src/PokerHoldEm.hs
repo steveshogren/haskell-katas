@@ -2,6 +2,7 @@ module PokerHoldEm where
 
 import PokerHands as PH
 import Data.Maybe(isJust, fromMaybe, catMaybes)
+import Data.Either(isLeft)
 import Data.List(sortBy, any, find)
 import GHC.Exts(groupWith)
 import Debug.Trace(trace)
@@ -121,3 +122,29 @@ rounder f n =
 oddsFlopToTurn :: Integer -> Double
 oddsFlopToTurn outs =
   rounder (100*  ((fromIntegral outs)/46.0) ) 1
+
+runner =
+  let flop = fromMaybe [] (parseHand "QD 2H 9S")
+      --p1 = fromMaybe [] (parseHand "4D 4H")
+      --p2 = fromMaybe [] (parseHand "2D 2H")
+      p1 = fromMaybe [] (parseHand "QD 4H")
+      p2 = fromMaybe [] (parseHand "6D 5H")
+  in winPercentage flop p1 p2
+
+leftWins :: PH.AHand -> PH.AHand -> Bool
+leftWins h1 h2 = h1 > h2
+
+winPercentage flop p1 p2 =
+  let h1 = outCount flop p1
+      h2 = outCount flop p2
+      leftWinning = isLeft $ winner p1 p2 flop
+      leftWinChances =
+        foldl (\sum (outs1,ahand1) ->
+                 sum + foldl (\sum (outs2, ahand2) ->
+                      let is1 = leftWins ahand1 ahand2
+                      in if is1 then sum + (oddsFlopToTurn outs1) else sum)
+              0 h2) 0 h1
+   in leftWinChances
+    
+
+  --(100, 0)

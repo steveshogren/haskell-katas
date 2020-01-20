@@ -22,6 +22,15 @@ testTwoOverCardCount =
        hand = fromMaybe [] (parseHand "QH 9H")
    in (assertEqual "Two overcards" 2 (PHE.overCardCount flop hand))
 
+testWinPercentage :: Assertion
+testWinPercentage =
+   let flop = fromMaybe [] (parseHand "QD 2H 9S")
+       --p1 = fromMaybe [] (parseHand "4D 4H")
+       --p2 = fromMaybe [] (parseHand "2D 2H")
+       p3 = fromMaybe [] (parseHand "QD 4H")
+       p4 = fromMaybe [] (parseHand "6D 5H")
+   in (assertEqual "win %" (100,0) (PHE.winPercentage flop p3 p4))
+
 testOutCounterPocketPair :: Assertion
 testOutCounterPocketPair =
    let flop = fromMaybe [] (parseHand "QD 2H 9S")
@@ -185,6 +194,7 @@ tests2 = testGroup "PokerHandsTests"
 
       , testCase "highestCards" testHighestCard
 
+      , testCase "win %" testWinPercentage 
   ]
 
 runner = defaultMain tests2
