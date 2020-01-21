@@ -128,23 +128,28 @@ runner =
       --p1 = fromMaybe [] (parseHand "4D 4H")
       --p2 = fromMaybe [] (parseHand "2D 2H")
       p1 = fromMaybe [] (parseHand "QD 4H")
-      p2 = fromMaybe [] (parseHand "6D 5H")
+      p2 = fromMaybe [] (parseHand "QD QH")
   in winPercentage flop p1 p2
 
 leftWins :: PH.AHand -> PH.AHand -> Bool
-leftWins h1 h2 = h1 > h2
+leftWins h1 h2 = h1 < h2
 
 winPercentage flop p1 p2 =
-  let h1 = outCount flop p1
-      h2 = outCount flop p2
+  let h1 = outCount flop p1 ++ [(0, bestHand (flop ++ p1))]
+      h2 = outCount flop p2 ++ [(0, bestHand (flop ++ p2))]
       leftWinning = isLeft $ winner p1 p2 flop
-      leftWinChances =
-        foldl (\sum (outs1,ahand1) ->
-                 sum + foldl (\sum (outs2, ahand2) ->
-                      let is1 = leftWins ahand1 ahand2
-                      in if is1 then sum + (oddsFlopToTurn outs1) else sum)
-              0 h2) 0 h1
-   in leftWinChances
-    
-
-  --(100, 0)
+      (leftOuts, rightOuts) =
+        foldl (\(l,r) (outs1,ahand1) ->
+                 let (ln, rn) =
+                       foldl (\(l, r) (outs2, ahand2) ->
+                                 if leftWins ahand1 ahand2
+                                 then (l + outs1, r)
+                                 else (l, r + outs2))
+                       (0,0) h2
+                 in (l+ln, r+rn))
+        (0,0) h1
+      leftPercent = oddsFlopToTurn leftOuts
+      rightPercent = oddsFlopToTurn rightOuts
+   in if leftWinning then
+        (100-rightPercent,rightPercent)
+      else (leftPercent,100-leftPercent)
