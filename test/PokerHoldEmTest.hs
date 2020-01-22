@@ -25,11 +25,28 @@ testTwoOverCardCount =
 testWinPercentage :: Assertion
 testWinPercentage =
    let flop = fromMaybe [] (parseHand "QD 2H 9S")
-       --p1 = fromMaybe [] (parseHand "4D 4H")
-       --p2 = fromMaybe [] (parseHand "2D 2H")
+       p1 = fromMaybe [] (parseHand "QD 4H")
+       p2 = fromMaybe [] (parseHand "3D 9H")
+
        p3 = fromMaybe [] (parseHand "QD 4H")
        p4 = fromMaybe [] (parseHand "6D 5H")
-   in (assertEqual "win %" (100,0) (PHE.winPercentage flop p3 p4))
+
+       flop2 = fromMaybe [] (parseHand "3H 4S 5H")
+       p5 = fromMaybe [] (parseHand "6D 4H")
+       p6 = fromMaybe [] (parseHand "3D 9H")
+
+   in (assertEqual "win %" (95.7, 4.3) (PHE.winPercentage flop p1 p2))
+      >> (assertEqual "win %" (100,0) (PHE.winPercentage flop p3 p4))
+      -- >> (assertEqual "win %" (100,0) (PHE.winPercentage flop2 p5 p6))
+
+testOutCounterStraightWithTwo :: Assertion
+testOutCounterStraightWithTwo =
+   let flop = fromMaybe [] (parseHand "3D 4H 5S")
+       h1 = fromMaybe [] (parseHand "2D 9H")
+       flop2 = fromMaybe [] (parseHand "JD QH KS")
+       h2 = fromMaybe [] (parseHand "AD 3H")
+   in (assertEqual "straigt two" [(4, Straight Six)] (PHE.outCount flop h1))
+      >> (assertEqual "straigt ace" [(4, Straight Ace)] (PHE.outCount flop2 h2))
 
 testOutCounterPocketPair :: Assertion
 testOutCounterPocketPair =
@@ -169,6 +186,7 @@ tests2 :: TestTree
 tests2 = testGroup "PokerHandsTests"
   [
       testCase "pocket pair to set" testOutCounterPocketPair
+      , testCase "straight with two" testOutCounterStraightWithTwo
       , testCase "one overcard" testOutCounterOneOvercard
       , testCase "two pair to full house" testOutCounterTwoPairToFullHouse
       , testCase "two overcards to overpair" testOutCounterTwoOvercard

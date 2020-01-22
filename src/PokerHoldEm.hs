@@ -33,7 +33,16 @@ isOpenStraight cards =
   let sorted = sortBy (\x y -> compare (PH.face x) (PH.face y)) cards
       first4 = isStraight $ take 4 sorted
       second4 = isStraight $ take 4 $ drop 1 sorted
-  in concatMap (\(Straight face) -> [face, pred face]) $ catMaybes [first4, second4]
+  in concatMap
+     (\(Straight face) ->
+        if (face == Five) then
+         [pred face]
+        else if (face == Ace) then
+         [face]
+        else
+         [face, pred face]
+     )
+     $ catMaybes [first4, second4]
 
 isInsideStraight :: [Card] -> [Face]
 isInsideStraight cards =
@@ -72,14 +81,15 @@ outCount flop hand@[c1, c2] =
     [(4, Straight (head insideStraight))]
   else if isJust flush && length openStraight > 0 then
     let (Just suit) = flush
-        [face1, face2] = openStraight
-    in [(9, Flush suit), (3, Straight face1), (3, Straight face2)]
+        -- only count these straights as a 3 out, because of the
+        -- addition of the extra card to the flush count
+        faces = map (\f -> (3, Straight f)) openStraight
+    in [(9, Flush suit)] ++ faces
   else if isJust flush then
     let (Just suit) = flush
     in [(9, Flush suit)]
   else if length openStraight > 0 then
-    let [face1, face2] = openStraight
-    in [(4, Straight face1), (4, Straight face2)]
+    map (\f -> (4, Straight f)) openStraight
   else if isJust threeKind then
     let Just (ThreeOfAKind face) = threeKind
         [a,b] = sortBy compare $ filter (\c -> c /= face) $ map PH.face testHand
@@ -123,17 +133,10 @@ oddsFlopToTurn :: Integer -> Double
 oddsFlopToTurn outs =
   rounder (100*  ((fromIntegral outs)/46.0) ) 1
 
-runner =
-  let flop = fromMaybe [] (parseHand "QD 2H 9S")
-      --p1 = fromMaybe [] (parseHand "4D 4H")
-      --p2 = fromMaybe [] (parseHand "2D 2H")
-      p1 = fromMaybe [] (parseHand "QD 4H")
-      p2 = fromMaybe [] (parseHand "QD QH")
-  in winPercentage flop p1 p2
-
 leftWins :: PH.AHand -> PH.AHand -> Bool
 leftWins h1 h2 = h1 < h2
 
+--winPercentage :: [Card] -> [Card] -> [Card] -> (Double, Double)
 winPercentage flop p1 p2 =
   let h1 = outCount flop p1 ++ [(0, bestHand (flop ++ p1))]
       h2 = outCount flop p2 ++ [(0, bestHand (flop ++ p2))]
@@ -153,3 +156,15 @@ winPercentage flop p1 p2 =
    in if leftWinning then
         (100-rightPercent,rightPercent)
       else (leftPercent,100-leftPercent)
+
+-- scratch 
+runner =
+  let flop = fromMaybe [] (parseHand "3D 4H 5S")
+      p1 = fromMaybe [] (parseHand "2D 9H")
+      p2 = fromMaybe [] (parseHand "6D 4H")
+  in winPercentage flop p1 p2
+
+outs =
+  let flop = fromMaybe [] (parseHand "3D 4H 5S")
+      p1 = fromMaybe [] (parseHand "2D 9H")
+  in outCount flop p1
